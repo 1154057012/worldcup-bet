@@ -316,14 +316,14 @@ body::before{
 /* ===== 添加下注页 ===== */
 .form-group{margin-bottom:20px}
 .form-group label{
-  display:block;font-size:12px;color:var(--text-dim);
+  display:block;font-size:12px;color:var(--text);
   margin-bottom:8px;font-weight:600;text-transform:uppercase;
   letter-spacing:0.8px;
 }
 .form-group input,.form-group select,.form-group textarea{
   width:100%;padding:14px 16px;
-  background:rgba(255,255,255,0.04);
-  border:1px solid var(--border);
+  background:rgba(255,255,255,0.08);
+  border:1px solid var(--border-bright);
   border-radius:var(--radius-sm);
   color:var(--text);font-size:15px;
   outline:none;transition:all 0.25s;
@@ -969,6 +969,7 @@ function betCardHTML(b, showActions) {
       <button class="btn-settle" onclick="openSettle('${b.id}')">结算</button>
       <button class="btn-delete" onclick="deleteBet('${b.id}')">删除</button>
     </div>` : '';
+  const dateStr = b.created_at ? b.created_at.slice(0, 10) : '';
   return `
     <div class="bet-card ${cardClass}">
       <div class="bet-header">
@@ -980,6 +981,7 @@ function betCardHTML(b, showActions) {
         ${b.bet_detail ? `<span>${esc(b.bet_detail)}</span>` : ''}
         <span>赔率 ${b.odds}</span>
         <span>¥${b.amount}</span>
+        ${dateStr ? `<span>${dateStr}</span>` : ''}
       </div>
       <div class="bet-footer">
         <span class="result-tag ${resultClass}">${b.result || '未结算'}</span>
@@ -1235,7 +1237,7 @@ function dataFilterResult(el, result) {
 
 function renderDataPage() {
   const search = document.getElementById('data-search').value.trim().toLowerCase();
-  let bets = allBets;
+  let bets = [...allBets].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
   if (dataUserFilter !== 'all') bets = bets.filter(b => b.user_id === dataUserFilter);
   if (dataResultFilter === '未结算') bets = bets.filter(b => !b.result);
   else if (dataResultFilter !== '全部') bets = bets.filter(b => b.result === dataResultFilter);
