@@ -4,449 +4,616 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>2026 世界杯下注记录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --bg: #0a0e17;
-  --card: #141a2a;
-  --card-hover: #1a2236;
-  --border: #1e2a42;
-  --text: #e8ecf4;
-  --text-dim: #7a8ba8;
-  --accent: #4ade80;
-  --accent-dim: #22543d;
-  --red: #f87171;
-  --red-dim: #4a1c1c;
-  --yellow: #fbbf24;
-  --blue: #60a5fa;
-  --purple: #a78bfa;
-  --radius: 14px;
-  --nav-h: 64px;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07090f;
+  --card:rgba(20,26,42,0.55);
+  --card-solid:#1a2236;
+  --card-hover:rgba(30,40,60,0.7);
+  --border:rgba(255,255,255,0.08);
+  --border-bright:rgba(255,255,255,0.15);
+  --text:#f0f3f8;
+  --text-dim:#8a9bbd;
+  --accent:#4ade80;
+  --accent-glow:rgba(74,222,128,0.25);
+  --accent-dim:#22543d;
+  --red:#f87171;
+  --red-glow:rgba(248,113,113,0.2);
+  --red-dim:#4a1c1c;
+  --yellow:#fbbf24;
+  --yellow-glow:rgba(251,191,36,0.2);
+  --blue:#60a5fa;
+  --blue-glow:rgba(96,165,250,0.2);
+  --purple:#a78bfa;
+  --radius:16px;
+  --radius-sm:10px;
+  --nav-h:68px;
+  --gradient-accent:linear-gradient(135deg,#4ade80,#22d3ee);
+  --gradient-warm:linear-gradient(135deg,#f87171,#fb923c);
 }
-html, body { height: 100%; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Helvetica Neue", sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+html,body{height:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,"SF Pro","Helvetica Neue",sans-serif;
+  background:var(--bg) url('https://pic1.imgdb.cn/item/6a339c1e91b65c4475ab68ac.png') center/cover no-repeat fixed;
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:-1;
+  background:rgba(7,9,15,0.5);
 }
 /* ===== 选用户页面 ===== */
-#user-select {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-  background: linear-gradient(160deg, #0a0e17 0%, #0f1628 50%, #0a1a12 100%);
+#user-select{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;
+  background:var(--bg);
+  position:relative;overflow:hidden;
 }
-#user-select .logo {
-  font-size: 56px;
-  margin-bottom: 8px;
-  cursor: default;
-  user-select: none;
-  -webkit-user-select: none;
+/* 浮动光晕 */
+#user-select::before{
+  content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(74,222,128,0.12) 0%,transparent 70%);
+  top:-150px;left:-100px;animation:floatGlow1 8s ease-in-out infinite;pointer-events:none;
 }
-#user-select .title {
-  font-size: 28px;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--accent), var(--blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 6px;
-  cursor: default;
-  user-select: none;
-  -webkit-user-select: none;
+#user-select::after{
+  content:'';position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(96,165,250,0.1) 0%,transparent 70%);
+  bottom:-100px;right:-80px;animation:floatGlow2 10s ease-in-out infinite;pointer-events:none;
 }
-#user-select .subtitle {
-  color: var(--text-dim);
-  font-size: 14px;
-  margin-bottom: 40px;
+@keyframes floatGlow1{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(60px,40px) scale(1.15)}
 }
-.user-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-  max-width: 360px;
+@keyframes floatGlow2{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(-40px,-30px) scale(1.1)}
 }
-.user-btn {
-  width: 140px;
-  padding: 28px 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
+#user-select .logo{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,#4ade80,#22d3ee);
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;
+  margin-bottom:20px;cursor:default;
+  user-select:none;-webkit-user-select:none;
+  animation:logoEntry 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  box-shadow:0 8px 32px rgba(74,222,128,0.25),inset 0 -4px 8px rgba(0,0,0,0.15);
+  position:relative;
 }
-.user-btn:active { transform: scale(0.95); }
-.user-btn .avatar { font-size: 36px; margin-bottom: 8px; }
-.user-btn .name { font-size: 16px; font-weight: 600; }
+#user-select .logo::after{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(74,222,128,0.3),rgba(34,211,238,0.3));
+  z-index:-1;filter:blur(8px);
+}
+#user-select .logo::before{
+  content:'';position:absolute;
+  width:28px;height:12px;
+  background:rgba(255,255,255,0.2);
+  border-radius:50%;
+  top:14px;left:18px;
+  transform:rotate(-25deg);
+}
+@keyframes logoEntry{
+  0%{opacity:0;transform:scale(0.3) rotate(-10deg)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
+}
+#user-select .title{
+  font-size:30px;font-weight:800;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,var(--accent),var(--blue),var(--purple));
+  background-size:200% 200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:6px;cursor:default;user-select:none;-webkit-user-select:none;
+  animation:titleShimmer 4s ease-in-out infinite,logoEntry 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+}
+@keyframes titleShimmer{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+#user-select .subtitle{
+  color:var(--text-dim);font-size:13px;margin-bottom:44px;
+  font-weight:500;letter-spacing:1px;
+  text-transform:uppercase;
+  animation:logoEntry 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+.user-grid{
+  display:flex;flex-wrap:wrap;gap:16px;justify-content:center;max-width:360px;
+  animation:logoEntry 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+}
+.user-btn{
+  width:140px;padding:28px 16px;
+  background:var(--card);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  text-align:center;cursor:pointer;
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  -webkit-tap-highlight-color:transparent;
+  position:relative;overflow:hidden;
+}
+.user-btn::before{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:linear-gradient(135deg,rgba(74,222,128,0.08),rgba(96,165,250,0.08));
+  opacity:0;transition:opacity 0.3s;
+}
+.user-btn:active{transform:scale(0.95)}
+.user-btn:hover{
+  border-color:var(--accent);
+  box-shadow:0 0 30px rgba(74,222,128,0.15),inset 0 0 30px rgba(74,222,128,0.03);
+}
+.user-btn:hover::before{opacity:1}
+.user-btn .avatar{
+  width:52px;height:52px;border-radius:16px;margin:0 auto 12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#000;position:relative;
+}
+.user-btn .name{font-size:15px;font-weight:700;position:relative;letter-spacing:0.3px}
+/* 用户头像渐变色 */
+.avatar-0{background:linear-gradient(135deg,#4ade80,#22d3ee)}
+.avatar-1{background:linear-gradient(135deg,#60a5fa,#a78bfa)}
+.avatar-2{background:linear-gradient(135deg,#f87171,#fb923c)}
+.avatar-3{background:linear-gradient(135deg,#fbbf24,#f472b6)}
 /* ===== 主容器 ===== */
-#app { display: none; min-height: 100vh; padding-bottom: calc(var(--nav-h) + 16px); }
+#app{display:none;min-height:100vh;padding-bottom:calc(var(--nav-h) + 16px)}
 /* 顶部栏 */
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;
+  background:rgba(17,22,36,0.9);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
 }
-.top-bar .current-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  font-size: 15px;
+.top-bar .current-user{
+  display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;
 }
-.top-bar .switch-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
+.top-bar .current-user .mini-avatar{
+  width:30px;height:30px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#000;
+  background:linear-gradient(135deg,#4ade80,#22d3ee);
 }
+.top-bar .switch-btn{
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  color:var(--text-dim);
+  padding:7px 14px;border-radius:var(--radius-sm);
+  font-size:12px;cursor:pointer;font-weight:600;
+  transition:all 0.2s;font-family:inherit;
+}
+.top-bar .switch-btn:active{background:rgba(255,255,255,0.1)}
 /* ===== 底部导航 ===== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: var(--nav-h);
-  background: var(--card);
-  border-top: 1px solid var(--border);
-  display: flex;
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:rgba(17,22,36,0.92);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex;z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
 }
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  cursor: pointer;
-  color: var(--text-dim);
-  font-size: 11px;
-  transition: color 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  border: none;
-  background: none;
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;cursor:pointer;
+  color:var(--text-dim);font-size:10px;font-weight:600;
+  transition:all 0.25s;-webkit-tap-highlight-color:transparent;
+  border:none;background:none;position:relative;
+  font-family:inherit;letter-spacing:0.3px;
 }
-.nav-item .icon { font-size: 22px; }
-.nav-item.active { color: var(--accent); }
+.nav-item .icon{font-size:0;line-height:1}
+.nav-item .icon svg{width:24px;height:24px;stroke:var(--text-dim);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:all 0.25s}
+.nav-item.active{color:var(--accent)}
+.nav-item.active .icon svg{stroke:var(--accent);filter:drop-shadow(0 0 8px var(--accent-glow))}
+.nav-item.active::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:32px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--accent);
+  box-shadow:0 0 12px var(--accent-glow);
+}
 /* ===== 页面内容 ===== */
-.page { display: none; padding: 16px 20px; }
-.page.active { display: block; }
+.page{display:none;padding:20px;animation:pageIn 0.35s ease both}
+.page.active{display:block}
+@keyframes pageIn{
+  0%{opacity:0;transform:translateY(8px)}
+  100%{opacity:1;transform:translateY(0)}
+}
 /* 首页 - 汇总卡片 */
-.summary-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+.summary-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.summary-card{
+  background:var(--card);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 16px 14px;
+  position:relative;overflow:hidden;
+  transition:all 0.3s;
 }
-.summary-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
+.summary-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  border-radius:var(--radius) var(--radius) 0 0;
 }
-.summary-card .label {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-}
-.summary-card .value {
-  font-size: 22px;
-  font-weight: 700;
-}
-.summary-card .value.positive { color: var(--accent); }
-.summary-card .value.negative { color: var(--red); }
+.summary-card:nth-child(1)::before{background:var(--gradient-accent)}
+.summary-card:nth-child(2)::before{background:linear-gradient(135deg,var(--blue),var(--purple))}
+.summary-card:nth-child(3)::before{background:linear-gradient(135deg,var(--yellow),#fb923c)}
+.summary-card:nth-child(4)::before{background:linear-gradient(135deg,var(--red),var(--yellow))}
+.summary-card .label{font-size:11px;color:var(--text-dim);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px}
+.summary-card .value{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-0.5px}
+.summary-card .value.positive{color:var(--accent)}
+.summary-card .value.negative{color:var(--red)}
 /* 记录列表 */
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.section-title{
+  font-size:17px;font-weight:700;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;letter-spacing:-0.3px;
 }
-.bet-list { display: flex; flex-direction: column; gap: 10px; }
-.bet-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  transition: background 0.15s;
+.bet-list{display:flex;flex-direction:column;gap:10px}
+.bet-card{
+  background:var(--card);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  transition:all 0.25s;
+  position:relative;overflow:hidden;
+  animation:cardIn 0.4s ease both;
 }
-.bet-card:active { background: var(--card-hover); }
-.bet-card .bet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+.bet-card::before{
+  content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;
+  border-radius:0 2px 2px 0;
 }
-.bet-card .match-name {
-  font-weight: 600;
-  font-size: 15px;
-  flex: 1;
+.bet-card.result-win::before{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+.bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
+.bet-card.result-half-win::before{background:#86efac;box-shadow:0 0 8px rgba(134,239,172,0.2)}
+.bet-card.result-half-lose::before{background:#fca5a5;box-shadow:0 0 8px rgba(252,165,165,0.2)}
+.bet-card.result-push::before{background:var(--yellow);box-shadow:0 0 8px var(--yellow-glow)}
+.bet-card.result-pending::before{background:var(--blue);box-shadow:0 0 8px var(--blue-glow)}
+@keyframes cardIn{
+  0%{opacity:0;transform:translateY(12px)}
+  100%{opacity:1;transform:translateY(0)}
 }
-.bet-card .bet-user {
-  font-size: 12px;
-  color: var(--text-dim);
-  background: rgba(255,255,255,0.06);
-  padding: 2px 8px;
-  border-radius: 6px;
-  margin-left: 8px;
+.bet-card:active{background:var(--card-hover)}
+.bet-card .bet-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
 }
-.bet-card .bet-info {
-  display: flex;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+.bet-card .match-name{font-weight:700;font-size:15px;flex:1;letter-spacing:-0.2px}
+.bet-card .bet-user{
+  font-size:11px;color:var(--text-dim);
+  background:rgba(255,255,255,0.05);
+  padding:3px 10px;border-radius:20px;
+  margin-left:8px;font-weight:600;
+  display:flex;align-items:center;gap:5px;
 }
-.bet-card .bet-info span { display: flex; align-items: center; gap: 4px; }
-.bet-card .bet-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.bet-card .bet-user .user-dot{
+  width:16px;height:16px;border-radius:5px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#000;
 }
-.bet-card .result-tag {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 6px;
+.bet-card .bet-info{
+  display:flex;gap:12px;font-size:12px;color:var(--text-dim);
+  margin-bottom:10px;flex-wrap:wrap;font-weight:500;
 }
-.result-tag.走水 { background: rgba(251,191,36,0.15); color: var(--yellow); }
-.result-tag.收米 { background: rgba(74,222,128,0.15); color: var(--accent); }
-.result-tag.收半米 { background: rgba(74,222,128,0.1); color: #86efac; }
-.result-tag.输半 { background: rgba(248,113,113,0.1); color: #fca5a5; }
-.result-tag.未结算 { background: rgba(96,165,250,0.12); color: var(--blue); }
-.bet-card .profit {
-  font-weight: 700;
-  font-size: 15px;
+.bet-card .bet-info span{display:flex;align-items:center;gap:4px}
+.bet-card .bet-footer{
+  display:flex;justify-content:space-between;align-items:center;
 }
-.profit.positive::before { content: '+'; }
-.profit.zero { color: var(--text-dim); }
+.bet-card .result-tag{
+  font-size:11px;font-weight:700;
+  padding:4px 12px;border-radius:20px;
+  letter-spacing:0.3px;
+}
+.result-tag.走水{background:rgba(251,191,36,0.12);color:var(--yellow)}
+.result-tag.收米{background:rgba(74,222,128,0.12);color:var(--accent)}
+.result-tag.收半米{background:rgba(134,239,172,0.1);color:#86efac}
+.result-tag.输半{background:rgba(248,113,113,0.1);color:#fca5a5}
+.result-tag.未结算{background:rgba(96,165,250,0.1);color:var(--blue)}
+.bet-card .profit{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.profit.positive::before{content:'+'}
+.profit.zero{color:var(--text-dim)}
 /* ===== 添加下注页 ===== */
-.form-group {
-  margin-bottom: 18px;
+.form-group{margin-bottom:20px}
+.form-group label{
+  display:block;font-size:12px;color:var(--text-dim);
+  margin-bottom:8px;font-weight:600;text-transform:uppercase;
+  letter-spacing:0.8px;
 }
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-  font-weight: 500;
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;padding:14px 16px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);font-size:15px;
+  outline:none;transition:all 0.25s;
+  -webkit-appearance:none;appearance:none;
+  font-family:inherit;
 }
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 12px 14px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 15px;
-  outline: none;
-  transition: border-color 0.2s;
-  -webkit-appearance: none;
-  appearance: none;
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(74,222,128,0.1),0 0 20px rgba(74,222,128,0.05);
 }
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  border-color: var(--accent);
+.form-group select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7fa0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
 }
-.form-group select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237a8ba8'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 36px;
-}
-.form-group textarea { resize: vertical; min-height: 60px; }
+.form-group textarea{resize:vertical;min-height:60px}
 /* 结果选择按钮组 */
-.result-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.result-group{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.result-btn{
+  padding:14px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text);font-size:15px;font-weight:700;
+  cursor:pointer;transition:all 0.25s;text-align:center;
+  -webkit-tap-highlight-color:transparent;font-family:inherit;
 }
-.result-btn {
-  padding: 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  -webkit-tap-highlight-color: transparent;
-}
-.result-btn:active { transform: scale(0.97); }
-.result-btn.selected.走水 { border-color: var(--yellow); background: rgba(251,191,36,0.1); }
-.result-btn.selected.收米 { border-color: var(--accent); background: rgba(74,222,128,0.1); }
-.result-btn.selected.收半米 { border-color: #86efac; background: rgba(134,239,172,0.08); }
-.result-btn.selected.输半 { border-color: var(--red); background: rgba(248,113,113,0.1); }
+.result-btn:active{transform:scale(0.97)}
+.result-btn.selected.走水{border-color:var(--yellow);background:rgba(251,191,36,0.08);box-shadow:0 0 20px rgba(251,191,36,0.1)}
+.result-btn.selected.收米{border-color:var(--accent);background:rgba(74,222,128,0.08);box-shadow:0 0 20px rgba(74,222,128,0.1)}
+.result-btn.selected.收半米{border-color:#86efac;background:rgba(134,239,172,0.06);box-shadow:0 0 20px rgba(134,239,172,0.1)}
+.result-btn.selected.输半{border-color:var(--red);background:rgba(248,113,113,0.08);box-shadow:0 0 20px rgba(248,113,113,0.1)}
+.result-btn.selected.pending{border-color:var(--blue);background:rgba(96,165,250,0.08);box-shadow:0 0 20px rgba(96,165,250,0.1)}
 /* 提交按钮 */
-.submit-btn {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--accent), #22c55e);
-  border: none;
-  border-radius: 12px;
-  color: #000;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  margin-top: 8px;
+.submit-btn{
+  width:100%;padding:16px;
+  background:var(--gradient-accent);
+  border:none;border-radius:var(--radius);
+  color:#000;font-size:16px;font-weight:800;
+  cursor:pointer;transition:all 0.25s;
+  -webkit-tap-highlight-color:transparent;margin-top:8px;
+  font-family:inherit;letter-spacing:0.3px;
+  position:relative;overflow:hidden;
 }
-.submit-btn:active { opacity: 0.85; }
-.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-/* ===== 排行榜 ===== */
-.leaderboard { display: flex; flex-direction: column; gap: 10px; }
-.lb-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
+.submit-btn::after{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:linear-gradient(transparent,rgba(255,255,255,0.15),transparent);
+  transform:rotate(45deg);transition:0.5s;pointer-events:none;
+  opacity:0;
 }
-.lb-card .rank {
-  font-size: 24px;
-  font-weight: 800;
-  width: 40px;
-  text-align: center;
-}
-.lb-card .rank.gold { color: #fbbf24; }
-.lb-card .rank.silver { color: #94a3b8; }
-.lb-card .rank.bronze { color: #d97706; }
-.lb-card .lb-info { flex: 1; }
-.lb-card .lb-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-.lb-card .lb-stats {
-  font-size: 12px;
-  color: var(--text-dim);
-  display: flex;
-  gap: 12px;
-}
-.lb-card .lb-profit {
-  font-size: 20px;
-  font-weight: 700;
-}
+.submit-btn:active{transform:scale(0.98)}
+.submit-btn:active::after{left:100%;opacity:1}
+.submit-btn:disabled{opacity:0.35;cursor:not-allowed}
 /* 空状态 */
-.empty-state {
-  text-align: center;
-  padding: 48px 20px;
-  color: var(--text-dim);
-}
-.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-.empty-state .msg { font-size: 15px; }
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-dim)}
+.empty-state .icon{font-size:56px;margin-bottom:16px;opacity:0.7}
+.empty-state .msg{font-size:15px;font-weight:500}
 /* ===== Toast ===== */
-.toast {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100px);
-  background: var(--card);
-  border: 1px solid var(--border);
-  padding: 12px 24px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 999;
-  transition: transform 0.3s ease;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+.toast{
+  position:fixed;top:20px;left:50%;
+  transform:translateX(-50%) translateY(-100px) scale(0.9);
+  background:rgba(17,22,36,0.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border);
+  padding:12px 24px;border-radius:var(--radius);
+  font-size:14px;font-weight:600;z-index:999;
+  transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
 }
-.toast.show { transform: translateX(-50%) translateY(0); }
-.toast.success { border-color: var(--accent); color: var(--accent); }
-.toast.error { border-color: var(--red); color: var(--red); }
+.toast.show{transform:translateX(-50%) translateY(0) scale(1)}
+.toast.success{border-color:rgba(74,222,128,0.3);color:var(--accent)}
+.toast.error{border-color:rgba(248,113,113,0.3);color:var(--red)}
 /* 加载中 */
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: var(--text-dim);
+.loading{text-align:center;padding:40px;color:var(--text-dim);font-weight:500}
+.loading::after{
+  content:'';display:inline-block;width:20px;height:20px;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin 0.7s linear infinite;
+  margin-left:10px;vertical-align:middle;
 }
-.loading::after {
-  content: '';
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin{to{transform:rotate(360deg)}}
 /* 删除按钮 */
-.delete-btn {
-  background: none;
-  border: none;
-  color: var(--text-dim);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 4px;
-  opacity: 0.5;
-  transition: opacity 0.2s;
+.delete-btn{
+  background:none;border:none;color:var(--text-dim);
+  font-size:16px;cursor:pointer;padding:4px;
+  opacity:0.4;transition:all 0.2s;
 }
-.delete-btn:hover { opacity: 1; color: var(--red); }
+.delete-btn:hover{opacity:1;color:var(--red)}
 /* 筛选栏 */
-.filter-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+.filter-bar{
+  display:flex;gap:8px;margin-bottom:16px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
 }
-.filter-bar::-webkit-scrollbar { display: none; }
-.filter-chip {
-  padding: 8px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text-dim);
-  font-size: 13px;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-chip{
+  padding:8px 16px;border-radius:20px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);
+  color:var(--text-dim);font-size:13px;
+  white-space:nowrap;cursor:pointer;
+  transition:all 0.25s;-webkit-tap-highlight-color:transparent;
+  font-weight:600;font-family:inherit;
 }
-.filter-chip.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(74,222,128,0.08);
+.filter-chip.active{
+  border-color:var(--accent);color:var(--accent);
+  background:rgba(74,222,128,0.08);
+  box-shadow:0 0 16px rgba(74,222,128,0.08);
 }
 /* 筛选用户标签 */
-.user-filter {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
+.user-filter{
+  display:flex;gap:8px;margin-bottom:16px;
+  overflow-x:auto;scrollbar-width:none;
 }
-.user-filter::-webkit-scrollbar { display: none; }
+.user-filter::-webkit-scrollbar{display:none}
+/* Stagger 延迟 */
+.bet-card:nth-child(1){animation-delay:0s}
+.bet-card:nth-child(2){animation-delay:0.04s}
+.bet-card:nth-child(3){animation-delay:0.08s}
+.bet-card:nth-child(4){animation-delay:0.12s}
+.bet-card:nth-child(5){animation-delay:0.16s}
+/* ===== 走势图 ===== */
+.chart-section{
+  background:var(--card);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;margin-bottom:20px;
+}
+.chart-section .chart-title{
+  font-size:13px;font-weight:700;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;
+}
+.chart-wrap{position:relative;width:100%;height:140px}
+.chart-wrap canvas{width:100%;height:100%;display:block}
+.chart-tabs{
+  display:flex;gap:6px;margin-bottom:12px;
+}
+.chart-tab{
+  padding:5px 12px;border-radius:16px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  color:var(--text-dim);transition:all 0.2s;font-family:inherit;
+}
+.chart-tab.active{
+  background:rgba(74,222,128,0.1);border-color:var(--accent);color:var(--accent);
+}
+/* ===== 未确认记录 ===== */
+.pending-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.pending-header .section-title{margin-bottom:0}
+.pending-count{
+  font-size:12px;font-weight:700;color:var(--yellow);
+  background:rgba(251,191,36,0.1);padding:3px 10px;border-radius:12px;
+}
+.bet-card .bet-actions{
+  display:flex;gap:8px;margin-top:10px;
+}
+.btn-settle{
+  flex:1;padding:10px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:700;cursor:pointer;
+  background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);
+  color:var(--accent);transition:all 0.2s;font-family:inherit;
+}
+.btn-settle:active{transform:scale(0.97)}
+.btn-delete{
+  padding:10px 14px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:700;cursor:pointer;
+  background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15);
+  color:var(--red);transition:all 0.2s;font-family:inherit;
+}
+.btn-delete:active{transform:scale(0.97)}
+/* ===== 结算浮层 ===== */
+.settle-sheet{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--card-solid);
+  border-top:1px solid var(--border-bright);
+  border-radius:20px 20px 0 0;
+  padding:24px 20px;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  box-shadow:0 -16px 48px rgba(0,0,0,0.4);
+  animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.settle-sheet.show{display:block}
+@keyframes slideUp{
+  0%{transform:translateY(100%)}
+  100%{transform:translateY(0)}
+}
+.settle-sheet .sheet-title{
+  font-size:16px;font-weight:700;margin-bottom:6px;
+}
+.settle-sheet .sheet-match{
+  font-size:13px;color:var(--text-dim);margin-bottom:16px;
+}
+.settle-backdrop{
+  display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,0.4);
+}
+.settle-backdrop.show{display:block}
+/* ===== 数据页 ===== */
+.data-summary{
+  font-size:12px;color:var(--text-dim);margin-bottom:12px;font-weight:500;
+}
+.data-filters{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;
+}
+.data-filters .filter-chip{font-size:12px;padding:6px 12px}
+.search-box{
+  width:100%;padding:10px 14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);font-size:14px;
+  outline:none;transition:all 0.25s;
+  font-family:inherit;margin-bottom:14px;
+}
+.search-box:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(74,222,128,0.1);
+}
+.search-box::placeholder{color:var(--text-dim)}
+/* ===== 密码弹窗 ===== */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:24px;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:var(--card-solid);
+  border:1px solid var(--border-bright);
+  border-radius:20px;padding:32px 28px;
+  width:100%;max-width:320px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.5);
+  animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+  text-align:center;
+}
+@keyframes modalIn{
+  0%{opacity:0;transform:scale(0.9) translateY(20px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+.modal-box .modal-icon{
+  width:56px;height:56px;border-radius:16px;margin:0 auto 16px;
+  background:linear-gradient(135deg,rgba(74,222,128,0.12),rgba(96,165,250,0.12));
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+}
+.modal-box .modal-icon svg{width:28px;height:28px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.modal-box h3{font-size:18px;font-weight:700;margin-bottom:6px}
+.modal-box p{font-size:13px;color:var(--text-dim);margin-bottom:20px}
+.modal-box input{
+  width:100%;padding:14px 16px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);font-size:16px;
+  text-align:center;letter-spacing:6px;font-weight:700;
+  outline:none;transition:all 0.25s;font-family:inherit;
+  -webkit-text-security:disc;
+}
+.modal-box input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(74,222,128,0.1);
+}
+.modal-box input.error{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(248,113,113,0.1);
+  animation:shake 0.4s ease;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-6px)}
+  40%,80%{transform:translateX(6px)}
+}
+.modal-actions{
+  display:flex;gap:10px;margin-top:16px;
+}
+.modal-actions button{
+  flex:1;padding:12px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;cursor:pointer;
+  transition:all 0.2s;font-family:inherit;border:none;
+}
+.modal-actions .btn-cancel{
+  background:rgba(255,255,255,0.06);color:var(--text-dim);
+  border:1px solid var(--border);
+}
+.modal-actions .btn-confirm{
+  background:var(--gradient-accent);color:#000;
+}
+.modal-actions .btn-confirm:disabled{opacity:0.4;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -464,7 +631,7 @@ body {
   <!-- 顶部栏 -->
   <div class="top-bar">
     <div class="current-user">
-      <span id="current-avatar">👤</span>
+      <div class="mini-avatar" id="current-avatar">U</div>
       <span id="current-name">用户</span>
     </div>
     <button class="switch-btn" onclick="switchUser()">切换用户</button>
@@ -491,11 +658,22 @@ body {
       </div>
     </div>
 
-    <!-- 用户筛选 -->
-    <div class="user-filter" id="user-filter"></div>
+    <!-- 走势图 -->
+    <div class="chart-section">
+      <div class="chart-tabs">
+        <div class="chart-tab active" data-chart="line" onclick="switchChart(this,'line')">累计趋势</div>
+        <div class="chart-tab" data-chart="bar" onclick="switchChart(this,'bar')">每日盈亏</div>
+      </div>
+      <div class="chart-wrap" id="chart-line"><canvas id="canvas-line"></canvas></div>
+      <div class="chart-wrap" id="chart-bar" style="display:none"><canvas id="canvas-bar"></canvas></div>
+    </div>
 
-    <div class="section-title">📋 最近记录</div>
-    <div id="bet-list" class="bet-list">
+    <!-- 未确认记录 -->
+    <div class="pending-header">
+      <div class="section-title">⏳ 未确认记录</div>
+      <span class="pending-count" id="pending-count">0</span>
+    </div>
+    <div id="pending-list" class="bet-list">
       <div class="loading">加载中</div>
     </div>
   </div>
@@ -536,8 +714,9 @@ body {
         <input type="datetime-local" id="match-time">
       </div>
       <div class="form-group">
-        <label>比赛结果</label>
-        <div class="result-group">
+        <label>比赛结果（可稍后结算）</label>
+        <div class="result-group" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="result-btn pending selected" onclick="selectResult(this, null)" style="font-size:13px">⏳ 暂不选</div>
           <div class="result-btn 走水" onclick="selectResult(this, '走水')">💧 走水</div>
           <div class="result-btn 收米" onclick="selectResult(this, '收米')">💰 收米</div>
           <div class="result-btn 收半米" onclick="selectResult(this, '收半米')">💴 收半米</div>
@@ -552,15 +731,14 @@ body {
     </form>
   </div>
 
-  <!-- 排行榜 -->
-  <div class="page" id="page-rank">
-    <div class="section-title">🏆 盈亏排行</div>
-    <div class="filter-bar" id="rank-filter">
-      <div class="filter-chip active" data-period="all" onclick="filterRank(this, 'all')">全部</div>
-      <div class="filter-chip" data-period="today" onclick="filterRank(this, 'today')">今日</div>
-      <div class="filter-chip" data-period="week" onclick="filterRank(this, 'week')">本周</div>
-    </div>
-    <div id="leaderboard" class="leaderboard">
+  <!-- 数据页 -->
+  <div class="page" id="page-data">
+    <div class="section-title">📊 历史数据</div>
+    <div class="user-filter" id="data-user-filter"></div>
+    <div class="data-filters" id="data-result-filter"></div>
+    <input type="text" class="search-box" id="data-search" placeholder="搜索比赛..." oninput="renderDataPage()">
+    <div class="data-summary" id="data-summary"></div>
+    <div id="data-list" class="bet-list">
       <div class="loading">加载中</div>
     </div>
   </div>
@@ -568,17 +746,46 @@ body {
   <!-- 底部导航 -->
   <div class="bottom-nav">
     <button class="nav-item active" data-page="home">
-      <span class="icon">🏠</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
       <span>首页</span>
     </button>
     <button class="nav-item" data-page="add">
-      <span class="icon">📝</span>
+      <span class="icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
       <span>记一笔</span>
     </button>
-    <button class="nav-item" data-page="rank">
-      <span class="icon">🏆</span>
-      <span>排行</span>
+    <button class="nav-item" data-page="data">
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></span>
+      <span>数据</span>
     </button>
+  </div>
+</div>
+
+<!-- 结算浮层 -->
+<div class="settle-backdrop" id="settle-backdrop" onclick="closeSettle()"></div>
+<div class="settle-sheet" id="settle-sheet">
+  <div class="sheet-title">结算下注</div>
+  <div class="sheet-match" id="settle-match"></div>
+  <div class="result-group">
+    <div class="result-btn 走水" onclick="confirmSettle('走水')">💧 走水</div>
+    <div class="result-btn 收米" onclick="confirmSettle('收米')">💰 收米</div>
+    <div class="result-btn 收半米" onclick="confirmSettle('收半米')">💴 收半米</div>
+    <div class="result-btn 输半" onclick="confirmSettle('输半')">💸 输半</div>
+  </div>
+</div>
+
+<!-- 密码弹窗 -->
+<div class="modal-overlay" id="admin-modal">
+  <div class="modal-box">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3>管理员验证</h3>
+    <p>输入管理员密码以解锁隐藏用户</p>
+    <input type="password" id="admin-pwd" placeholder="······" maxlength="20" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAdminModal()">取消</button>
+      <button class="btn-confirm" id="btn-admin-confirm" onclick="verifyAdminPwd()">确认</button>
+    </div>
   </div>
 </div>
 
@@ -591,87 +798,102 @@ const SUPABASE_URL = 'https://vrwiylqsomtdgenvdtmy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_DQpDmsa8PQOQCD09k2nyQQ_abTbPE8V';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 用户头像映射
-const AVATARS = { '杨起飞': '🚀', '翟收米': '💰', '锐暴富': '🔥', '神秘人': '🎭' };
+const AVATARS = { '杨起飞': '杨', '翟收米': '翟', '锐暴富': '锐', '神秘人': '神' };
 let currentUser = null;
 let allUsers = [];
 let allBets = [];
 let selectedResult = null;
-let currentFilter = 'all';
 let titleClickCount = 0;
 let titleClickTimer = null;
+let userFilter = 'all';
+let currentSettleId = null;
 
 // ===== 初始化 =====
 async function init() {
   const saved = localStorage.getItem('wc_user');
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    showApp();
-  } else {
-    await loadUsers();
-    showUserSelect(false);
-  }
+  if (saved) { currentUser = JSON.parse(saved); showApp(); }
+  else { await loadUsers(); showUserSelect(false); }
 }
 
-// ===== 加载用户 =====
 async function loadUsers() {
   const { data, error } = await sb.from('users').select('*').order('created_at');
-  if (error) { console.error(error); return; }
-  allUsers = data;
+  if (!error) allUsers = data;
 }
 
-// ===== 显示用户选择 =====
+async function loadBets() {
+  const { data, error } = await sb.from('bets').select('*, users(name, is_hidden)').order('created_at', { ascending: false });
+  if (!error) allBets = data || [];
+}
+
+// ===== 用户选择 =====
 function showUserSelect(showHidden) {
   document.getElementById('user-select').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
   const grid = document.getElementById('user-grid');
   grid.innerHTML = '';
   const users = showHidden ? allUsers : allUsers.filter(u => !u.is_hidden);
-  users.forEach(u => {
+  users.forEach((u, i) => {
     const btn = document.createElement('div');
     btn.className = 'user-btn';
-    btn.innerHTML = `<div class="avatar">${AVATARS[u.name] || '👤'}</div><div class="name">${u.name}</div>`;
+    const letter = AVATARS[u.name] || u.name.charAt(0);
+    btn.innerHTML = `<div class="avatar avatar-${i % 4}">${letter}</div><div class="name">${u.name}</div>`;
     btn.onclick = () => selectUser(u);
     grid.appendChild(btn);
   });
 }
 
-// Logo 连点 5 次触发隐藏用户
 document.getElementById('logo').addEventListener('click', () => {
   titleClickCount++;
   clearTimeout(titleClickTimer);
   titleClickTimer = setTimeout(() => { titleClickCount = 0; }, 2000);
-  if (titleClickCount >= 5) {
-    titleClickCount = 0;
-    showUserSelect(true);
-    toast('已解锁隐藏用户', 'success');
-  }
+  if (titleClickCount >= 5) { titleClickCount = 0; showAdminModal(); }
 });
 
-// ===== 选择用户 =====
-function selectUser(user) {
-  currentUser = user;
-  localStorage.setItem('wc_user', JSON.stringify(user));
-  showApp();
+function showAdminModal() {
+  document.getElementById('admin-modal').classList.add('show');
+  const input = document.getElementById('admin-pwd');
+  input.value = ''; input.classList.remove('error');
+  setTimeout(() => input.focus(), 100);
+}
+function closeAdminModal() { document.getElementById('admin-modal').classList.remove('show'); }
+document.getElementById('admin-pwd').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); verifyAdminPwd(); } });
+async function verifyAdminPwd() {
+  const input = document.getElementById('admin-pwd');
+  const btn = document.getElementById('btn-admin-confirm');
+  const pwd = input.value.trim();
+  if (!pwd) { input.classList.add('error'); return; }
+  btn.disabled = true; btn.textContent = '验证中...';
+  try {
+    const { data, error } = await sb.rpc('verify_admin_password', { pwd });
+    if (error) throw error;
+    if (data === true) { closeAdminModal(); showUserSelect(true); toast('已解锁隐藏用户', 'success'); }
+    else { input.classList.add('error'); input.value = ''; input.placeholder = '密码错误'; setTimeout(() => { input.placeholder = '······'; }, 1500); }
+  } catch (err) { toast('验证失败：' + (err.message || '网络错误'), 'error'); }
+  btn.disabled = false; btn.textContent = '确认';
 }
 
-// ===== 切换用户 =====
-function switchUser() {
-  localStorage.removeItem('wc_user');
-  currentUser = null;
-  showUserSelect(false);
-}
+function selectUser(user) { currentUser = user; localStorage.setItem('wc_user', JSON.stringify(user)); showApp(); }
+function switchUser() { localStorage.removeItem('wc_user'); currentUser = null; showUserSelect(false); }
 
 // ===== 显示主应用 =====
 async function showApp() {
   document.getElementById('user-select').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('current-avatar').textContent = AVATARS[currentUser.name] || '👤';
+  document.getElementById('current-avatar').textContent = AVATARS[currentUser.name] || currentUser.name.charAt(0);
   document.getElementById('current-name').textContent = currentUser.name;
-  await loadUsers();
-  await loadBets();
-  renderUserFilter();
-  switchTab('home');
+  // 先并行加载，不阻塞 UI
+  Promise.all([loadUsers(), loadBets()]).then(() => {
+    if (currentUser.name === '神秘人') {
+      userFilter = currentUser.id;
+      document.getElementById('user-filter').style.display = 'none';
+    } else {
+      userFilter = 'all';
+      document.getElementById('user-filter').style.display = '';
+      renderUserFilter();
+    }
+    initDataFilters();
+    switchTab('home');
+  });
 }
 
 // ===== 底部导航 =====
@@ -683,212 +905,359 @@ function switchTab(page) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
-  document.getElementById(`page-${page}`).classList.add('active');
-  if (page === 'home') { renderBets(); renderSummary(); }
-  if (page === 'rank') { renderLeaderboard(); }
+  const pageEl = document.getElementById(`page-${page}`);
+  pageEl.style.animation = 'none'; pageEl.offsetHeight; pageEl.style.animation = '';
+  pageEl.classList.add('active');
+  if (page === 'home') { renderSummary(); renderPending(); drawCharts(); }
+  if (page === 'data') { renderDataPage(); }
 }
 
-// ===== 加载下注记录 =====
-async function loadBets() {
-  const { data, error } = await sb
-    .from('bets')
-    .select('*, users(name, is_hidden)')
-    .order('created_at', { ascending: false });
-  if (error) { console.error(error); return; }
-  allBets = data || [];
-}
-
-// ===== 渲染用户筛选标签 =====
+// ===== 用户筛选（首页） =====
 function renderUserFilter() {
-  const container = document.getElementById('user-filter');
-  container.innerHTML = '<div class="filter-chip active" data-user="all" onclick="filterUser(this, \'all\')">全部</div>';
+  const c = document.getElementById('user-filter');
+  c.innerHTML = '<div class="filter-chip active" data-user="all" onclick="filterUser(this,\'all\')">全部</div>';
   allUsers.filter(u => !u.is_hidden).forEach(u => {
-    container.innerHTML += `<div class="filter-chip" data-user="${u.id}" onclick="filterUser(this, '${u.id}')">${AVATARS[u.name] || ''} ${u.name}</div>`;
+    c.innerHTML += `<div class="filter-chip" data-user="${u.id}" onclick="filterUser(this,'${u.id}')">${u.name}</div>`;
   });
 }
-
-let userFilter = 'all';
 function filterUser(el, userId) {
   userFilter = userId;
   document.querySelectorAll('#user-filter .filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
-  renderBets();
+  renderSummary(); renderPending(); drawCharts();
 }
 
-// ===== 渲染汇总 =====
+// ===== 汇总 =====
 function renderSummary() {
-  const userBets = userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter);
-  const totalProfit = userBets.reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
-  const totalBets = userBets.length;
-  const wins = userBets.filter(b => b.result === '收米' || b.result === '收半米').length;
-  const settled = userBets.filter(b => b.result && b.result !== '走水').length;
-  const winRate = settled > 0 ? Math.round((wins / settled) * 100) : 0;
+  const bets = userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter);
+  const totalProfit = bets.reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
+  const wins = bets.filter(b => b.result === '收米' || b.result === '收半米').length;
+  const settled = bets.filter(b => b.result && b.result !== '走水').length;
   const today = new Date().toISOString().slice(0, 10);
-  const todayProfit = userBets
-    .filter(b => b.created_at && b.created_at.slice(0, 10) === today)
-    .reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
-
-  const el = (id) => document.getElementById(id);
+  const todayProfit = bets.filter(b => b.created_at?.slice(0, 10) === today).reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
+  const el = id => document.getElementById(id);
   el('total-profit').textContent = (totalProfit >= 0 ? '+' : '') + totalProfit.toFixed(2);
   el('total-profit').className = 'value ' + (totalProfit >= 0 ? 'positive' : 'negative');
-  el('total-bets').textContent = totalBets;
-  el('win-rate').textContent = winRate + '%';
+  el('total-bets').textContent = bets.length;
+  el('win-rate').textContent = (settled > 0 ? Math.round((wins / settled) * 100) : 0) + '%';
   el('today-profit').textContent = (todayProfit >= 0 ? '+' : '') + todayProfit.toFixed(2);
   el('today-profit').className = 'value ' + (todayProfit >= 0 ? 'positive' : 'negative');
 }
 
-// ===== 渲染下注列表 =====
-function renderBets() {
-  const list = document.getElementById('bet-list');
-  let bets = userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter);
+// ===== 未确认记录 =====
+function renderPending() {
+  const list = document.getElementById('pending-list');
+  const bets = (userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter))
+    .filter(b => !b.result);
+  document.getElementById('pending-count').textContent = bets.length;
   if (bets.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="icon">📝</div><div class="msg">还没有记录，去记一笔吧</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="icon">✅</div><div class="msg">没有待结算的记录</div></div>';
     return;
   }
-  list.innerHTML = bets.slice(0, 50).map(b => {
-    const userName = b.users?.name || '未知';
-    const profit = parseFloat(b.profit) || 0;
-    const profitClass = profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
-    const resultClass = b.result || '未结算';
-    return `
-      <div class="bet-card">
-        <div class="bet-header">
-          <span class="match-name">${esc(b.match_name)}</span>
-          <span class="bet-user">${AVATARS[userName] || ''} ${esc(userName)}</span>
-        </div>
-        <div class="bet-info">
-          <span>📊 ${esc(b.bet_type)}</span>
-          ${b.bet_detail ? `<span>🎯 ${esc(b.bet_detail)}</span>` : ''}
-          <span>📈 赔率 ${b.odds}</span>
-          <span>💵 ¥${b.amount}</span>
-        </div>
-        <div class="bet-footer">
-          <span class="result-tag ${resultClass}">${b.result || '未结算'}</span>
-          <span class="profit ${profitClass}">${profit.toFixed(2)}</span>
-        </div>
-        ${b.note ? `<div style="font-size:12px;color:var(--text-dim);margin-top:6px;">💬 ${esc(b.note)}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+  list.innerHTML = bets.map(b => betCardHTML(b, true)).join('');
 }
 
-// ===== 选择结果 =====
+function betCardHTML(b, showActions) {
+  const userName = b.users?.name || '未知';
+  const profit = parseFloat(b.profit) || 0;
+  const profitClass = profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
+  const resultClass = b.result || '未结算';
+  const resultMap = { '收米': 'result-win', '收半米': 'result-half-win', '输半': 'result-half-lose', '走水': 'result-push' };
+  const cardClass = resultMap[b.result] || 'result-pending';
+  const actions = showActions ? `
+    <div class="bet-actions">
+      <button class="btn-settle" onclick="openSettle('${b.id}')">结算</button>
+      <button class="btn-delete" onclick="deleteBet('${b.id}')">删除</button>
+    </div>` : '';
+  return `
+    <div class="bet-card ${cardClass}">
+      <div class="bet-header">
+        <span class="match-name">${esc(b.match_name)}</span>
+        <span class="bet-user"><span class="user-dot avatar-${allUsers.findIndex(u => u.name === userName) % 4}">${AVATARS[userName] || userName.charAt(0)}</span>${esc(userName)}</span>
+      </div>
+      <div class="bet-info">
+        <span>${esc(b.bet_type)}</span>
+        ${b.bet_detail ? `<span>${esc(b.bet_detail)}</span>` : ''}
+        <span>赔率 ${b.odds}</span>
+        <span>¥${b.amount}</span>
+      </div>
+      <div class="bet-footer">
+        <span class="result-tag ${resultClass}">${b.result || '未结算'}</span>
+        <span class="profit ${profitClass}">${profit.toFixed(2)}</span>
+      </div>
+      ${b.note ? `<div style="font-size:12px;color:var(--text-dim);margin-top:8px;font-weight:500">${esc(b.note)}</div>` : ''}
+      ${actions}
+    </div>`;
+}
+
+// ===== 结算 =====
+function openSettle(id) {
+  currentSettleId = id;
+  const bet = allBets.find(b => b.id === id);
+  if (!bet) return;
+  document.getElementById('settle-match').textContent = bet.match_name + ' | 赔率 ' + bet.odds + ' | ¥' + bet.amount;
+  document.getElementById('settle-backdrop').classList.add('show');
+  document.getElementById('settle-sheet').classList.add('show');
+  document.querySelectorAll('#settle-sheet .result-btn').forEach(b => b.classList.remove('selected'));
+}
+function closeSettle() {
+  document.getElementById('settle-backdrop').classList.remove('show');
+  document.getElementById('settle-sheet').classList.remove('show');
+  currentSettleId = null;
+}
+async function confirmSettle(result) {
+  if (!currentSettleId) return;
+  const bet = allBets.find(b => b.id === currentSettleId);
+  if (!bet) return;
+  const odds = parseFloat(bet.odds), amount = parseFloat(bet.amount);
+  let profit = 0;
+  if (result === '走水') profit = 0;
+  else if (result === '收米') profit = amount * (odds - 1);
+  else if (result === '收半米') profit = amount * (odds - 1) / 2;
+  else if (result === '输半') profit = -amount / 2;
+  profit = Math.round(profit * 100) / 100;
+  const { error } = await sb.from('bets').update({ result, profit }).eq('id', currentSettleId);
+  if (error) { toast('结算失败：' + error.message, 'error'); return; }
+  toast('结算成功！' + (profit >= 0 ? '+' : '') + profit, 'success');
+  // 直接更新本地缓存，不重新请求
+  const idx = allBets.findIndex(b => b.id === currentSettleId);
+  if (idx !== -1) { allBets[idx].result = result; allBets[idx].profit = profit; }
+  closeSettle();
+  renderSummary(); renderPending(); drawCharts();
+}
+
+// ===== 删除 =====
+async function deleteBet(id) {
+  if (!confirm('确定删除这条记录？')) return;
+  const { error } = await sb.from('bets').delete().eq('id', id);
+  if (error) { toast('删除失败：' + error.message, 'error'); return; }
+  toast('已删除', 'success');
+  allBets = allBets.filter(b => b.id !== id);
+  renderSummary(); renderPending(); drawCharts();
+}
+
+// ===== 记一笔 =====
 function selectResult(el, result) {
-  document.querySelectorAll('.result-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#page-add .result-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
   selectedResult = result;
 }
 
-// ===== 提交下注 =====
 async function submitBet(e) {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.textContent = '提交中...';
-
+  btn.disabled = true; btn.textContent = '提交中...';
   const odds = parseFloat(document.getElementById('odds').value);
   const amount = parseFloat(document.getElementById('amount').value);
-
-  // 计算盈亏
   let profit = 0;
   if (selectedResult === '走水') profit = 0;
   else if (selectedResult === '收米') profit = amount * (odds - 1);
   else if (selectedResult === '收半米') profit = amount * (odds - 1) / 2;
   else if (selectedResult === '输半') profit = -amount / 2;
-
   const record = {
     user_id: currentUser.id,
     match_name: document.getElementById('match-name').value.trim(),
     bet_type: document.getElementById('bet-type').value,
     bet_detail: document.getElementById('bet-detail').value.trim() || null,
-    odds,
-    amount,
+    odds, amount,
     result: selectedResult,
-    profit: Math.round(profit * 100) / 100,
+    profit: selectedResult ? Math.round(profit * 100) / 100 : 0,
     match_time: document.getElementById('match-time').value || null,
     note: document.getElementById('note').value.trim() || null,
   };
-
-  const { error } = await sb.from('bets').insert(record);
-  if (error) {
-    toast('提交失败：' + error.message, 'error');
-  } else {
+  const { data, error } = await sb.from('bets').insert(record).select('*, users(name, is_hidden)').single();
+  if (error) { toast('提交失败：' + error.message, 'error'); }
+  else {
     toast('记录成功！', 'success');
     document.getElementById('bet-form').reset();
-    document.querySelectorAll('.result-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('#page-add .result-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector('#page-add .result-btn.pending').classList.add('selected');
     selectedResult = null;
-    await loadBets();
+    // 插入本地缓存头部
+    if (data) allBets.unshift(data);
   }
-
-  btn.disabled = false;
-  btn.textContent = '记一笔';
+  btn.disabled = false; btn.textContent = '记一笔';
 }
 
-// ===== 排行榜 =====
-let rankPeriod = 'all';
-function filterRank(el, period) {
-  rankPeriod = period;
-  document.querySelectorAll('#rank-filter .filter-chip').forEach(c => c.classList.remove('active'));
+// ===== 走势图 =====
+function switchChart(el, type) {
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  renderLeaderboard();
+  document.getElementById('chart-line').style.display = type === 'line' ? '' : 'none';
+  document.getElementById('chart-bar').style.display = type === 'bar' ? '' : 'none';
 }
 
-async function renderLeaderboard() {
-  const container = document.getElementById('leaderboard');
-  let bets = allBets;
-  if (rankPeriod === 'today') {
-    const today = new Date().toISOString().slice(0, 10);
-    bets = bets.filter(b => b.created_at?.slice(0, 10) === today);
-  } else if (rankPeriod === 'week') {
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    bets = bets.filter(b => b.created_at >= weekAgo);
-  }
+function drawCharts() {
+  const bets = (userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter))
+    .filter(b => b.result).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  drawLineChart(bets);
+  drawBarChart(bets);
+}
 
-  // 按用户汇总
-  const stats = {};
-  allUsers.filter(u => !u.is_hidden).forEach(u => {
-    stats[u.id] = { name: u.name, profit: 0, bets: 0, wins: 0 };
-  });
+function drawLineChart(bets) {
+  const canvas = document.getElementById('canvas-line');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height, pad = { t: 10, r: 12, b: 24, l: 44 };
+  ctx.clearRect(0, 0, W, H);
+  if (bets.length < 2) { ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center'; ctx.fillText('需要至少2条记录', W / 2, H / 2); return; }
+  // 按天聚合
+  const daily = {};
   bets.forEach(b => {
-    if (!stats[b.user_id]) return;
-    stats[b.user_id].profit += parseFloat(b.profit) || 0;
-    stats[b.user_id].bets++;
-    if (b.result === '收米' || b.result === '收半米') stats[b.user_id].wins++;
+    const d = b.created_at.slice(0, 10);
+    daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0);
   });
-
-  const ranked = Object.values(stats).sort((a, b) => b.profit - a.profit);
-  const medals = ['gold', 'silver', 'bronze'];
-  const rankEmoji = ['🥇', '🥈', '🥉'];
-
-  container.innerHTML = ranked.map((r, i) => {
-    const profitClass = r.profit > 0 ? 'positive' : r.profit < 0 ? 'negative' : 'zero';
-    return `
-      <div class="lb-card">
-        <div class="rank ${medals[i] || ''}">${rankEmoji[i] || (i + 1)}</div>
-        <div class="lb-info">
-          <div class="lb-name">${AVATARS[r.name] || ''} ${r.name}</div>
-          <div class="lb-stats">
-            <span>${r.bets} 注</span>
-            <span>${r.bets > 0 ? Math.round((r.wins / Math.max(r.bets, 1)) * 100) : 0}% 胜率</span>
-          </div>
-        </div>
-        <div class="lb-profit ${profitClass}">${r.profit >= 0 ? '+' : ''}${r.profit.toFixed(2)}</div>
-      </div>
-    `;
-  }).join('');
+  const days = Object.keys(daily).sort();
+  // 最近14天
+  const recent = days.slice(-14);
+  const vals = recent.map(d => daily[d]);
+  let cum = 0; const cumVals = vals.map(v => { cum += v; return cum; });
+  const minV = Math.min(0, ...cumVals), maxV = Math.max(0, ...cumVals);
+  const range = maxV - minV || 1;
+  const xStep = (W - pad.l - pad.r) / Math.max(recent.length - 1, 1);
+  const toY = v => pad.t + (1 - (v - minV) / range) * (H - pad.t - pad.b);
+  const toX = i => pad.l + i * xStep;
+  // 网格线
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + i * (H - pad.t - pad.b) / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+  }
+  // 零线
+  const zeroY = toY(0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
+  // 渐变填充
+  const grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
+  grad.addColorStop(0, 'rgba(74,222,128,0.15)'); grad.addColorStop(1, 'rgba(74,222,128,0)');
+  ctx.beginPath(); ctx.moveTo(toX(0), zeroY);
+  cumVals.forEach((v, i) => ctx.lineTo(toX(i), toY(v)));
+  ctx.lineTo(toX(cumVals.length - 1), zeroY); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  // 折线
+  ctx.beginPath();
+  cumVals.forEach((v, i) => { i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)); });
+  ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+  // 数据点
+  cumVals.forEach((v, i) => {
+    ctx.beginPath(); ctx.arc(toX(i), toY(v), 3, 0, Math.PI * 2);
+    ctx.fillStyle = v >= 0 ? '#4ade80' : '#f87171'; ctx.fill();
+  });
+  // X轴标签
+  ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
+  recent.forEach((d, i) => { if (i % Math.ceil(recent.length / 7) === 0 || i === recent.length - 1) ctx.fillText(d.slice(5), toX(i), H - 4); });
+  // Y轴标签
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = minV + (1 - i / 4) * range;
+    ctx.fillText(v.toFixed(0), pad.l - 6, pad.t + i * (H - pad.t - pad.b) / 4 + 4);
+  }
 }
 
-// ===== 工具函数 =====
+function drawBarChart(bets) {
+  const canvas = document.getElementById('canvas-bar');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = rect.height, pad = { t: 10, r: 12, b: 24, l: 44 };
+  ctx.clearRect(0, 0, W, H);
+  if (bets.length < 1) { ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center'; ctx.fillText('暂无数据', W / 2, H / 2); return; }
+  const daily = {};
+  bets.forEach(b => { const d = b.created_at.slice(0, 10); daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0); });
+  const recent = Object.keys(daily).sort().slice(-14);
+  const vals = recent.map(d => daily[d]);
+  const maxV = Math.max(1, ...vals.map(Math.abs));
+  const zeroY = pad.t + (H - pad.t - pad.b) / 2;
+  const barW = Math.min(20, (W - pad.l - pad.r) / recent.length * 0.6);
+  const gap = (W - pad.l - pad.r) / recent.length;
+  // 零线
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
+  // 柱子
+  vals.forEach((v, i) => {
+    const x = pad.l + gap * i + gap / 2 - barW / 2;
+    const h = Math.abs(v) / maxV * (H - pad.t - pad.b) / 2;
+    const y = v >= 0 ? zeroY - h : zeroY;
+    ctx.fillStyle = v >= 0 ? 'rgba(74,222,128,0.7)' : 'rgba(248,113,113,0.7)';
+    ctx.beginPath();
+    const r = Math.min(4, barW / 2);
+    if (v >= 0) { ctx.moveTo(x + r, y); ctx.lineTo(x + barW - r, y); ctx.quadraticCurveTo(x + barW, y, x + barW, y + r); ctx.lineTo(x + barW, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); }
+    else { ctx.moveTo(x, y); ctx.lineTo(x + barW, y); ctx.lineTo(x + barW, y + h - r); ctx.quadraticCurveTo(x + barW, y + h, x + barW - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); }
+    ctx.closePath(); ctx.fill();
+  });
+  // X轴标签
+  ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
+  recent.forEach((d, i) => { if (i % Math.ceil(recent.length / 7) === 0 || i === recent.length - 1) ctx.fillText(d.slice(5), pad.l + gap * i + gap / 2, H - 4); });
+  // Y轴标签
+  ctx.textAlign = 'right';
+  ctx.fillText('+' + maxV.toFixed(0), pad.l - 6, pad.t + 4);
+  ctx.fillText('0', pad.l - 6, zeroY + 4);
+  ctx.fillText('-' + maxV.toFixed(0), pad.l - 6, H - pad.b);
+}
+
+// ===== 数据页 =====
+let dataUserFilter = 'all', dataResultFilter = 'all';
+
+function initDataFilters() {
+  // 用户筛选
+  const uc = document.getElementById('data-user-filter');
+  uc.innerHTML = '<div class="filter-chip active" data-user="all" onclick="dataFilterUser(this,\'all\')">全部</div>';
+  allUsers.filter(u => !u.is_hidden).forEach(u => {
+    uc.innerHTML += `<div class="filter-chip" data-user="${u.id}" onclick="dataFilterUser(this,'${u.id}')">${u.name}</div>`;
+  });
+  // 结果筛选
+  const rc = document.getElementById('data-result-filter');
+  ['全部', '收米', '收半米', '走水', '输半', '未结算'].forEach((r, i) => {
+    rc.innerHTML += `<div class="filter-chip ${i === 0 ? 'active' : ''}" data-result="${r}" onclick="dataFilterResult(this,'${r}')">${r}</div>`;
+  });
+  dataUserFilter = 'all'; dataResultFilter = 'all';
+}
+
+function dataFilterUser(el, userId) {
+  dataUserFilter = userId;
+  document.querySelectorAll('#data-user-filter .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderDataPage();
+}
+function dataFilterResult(el, result) {
+  dataResultFilter = result;
+  document.querySelectorAll('#data-result-filter .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderDataPage();
+}
+
+function renderDataPage() {
+  const search = document.getElementById('data-search').value.trim().toLowerCase();
+  let bets = allBets;
+  if (dataUserFilter !== 'all') bets = bets.filter(b => b.user_id === dataUserFilter);
+  if (dataResultFilter === '未结算') bets = bets.filter(b => !b.result);
+  else if (dataResultFilter !== '全部') bets = bets.filter(b => b.result === dataResultFilter);
+  if (search) bets = bets.filter(b => b.match_name.toLowerCase().includes(search));
+  document.getElementById('data-summary').textContent = `共 ${bets.length} 条记录`;
+  const list = document.getElementById('data-list');
+  if (bets.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><div class="msg">没有匹配的记录</div></div>';
+    return;
+  }
+  list.innerHTML = bets.slice(0, 100).map(b => betCardHTML(b, false)).join('');
+}
+
+// ===== 工具 =====
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function toast(msg, type = 'success') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type;
+  t.textContent = msg; t.className = 'toast ' + type;
   setTimeout(() => t.classList.add('show'), 10);
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// 启动
 init();
 </script>
 </body>
