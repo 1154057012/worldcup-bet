@@ -266,7 +266,6 @@ body::before{
   border-radius:0 2px 2px 0;
 }
 .bet-card.result-win::before{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
-.bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
 .bet-card.result-half-win::before{background:#86efac;box-shadow:0 0 8px rgba(134,239,172,0.2)}
 .bet-card.result-half-lose::before{background:#fca5a5;box-shadow:0 0 8px rgba(252,165,165,0.2)}
 .bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
@@ -354,7 +353,7 @@ body::before{
 .result-btn:active{transform:scale(0.97)}
 .result-btn.selected.走水{border-color:var(--yellow);background:rgba(251,191,36,0.08);box-shadow:0 0 20px rgba(251,191,36,0.1)}
 .result-btn.selected.收米{border-color:var(--accent);background:rgba(74,222,128,0.08);box-shadow:0 0 20px rgba(74,222,128,0.1)}
-.result-btn.selected.收半米{border-color:#86efac;background:rgba(134,239,172,0.06);box-shadow:0 0 20px rgba(134,239,172,0.1)}
+.result-btn.selected.收半{border-color:#86efac;background:rgba(134,239,172,0.06);box-shadow:0 0 20px rgba(134,239,172,0.1)}
 .result-btn.selected.输半{border-color:var(--red);background:rgba(248,113,113,0.08);box-shadow:0 0 20px rgba(248,113,113,0.1)}
 .result-btn.selected.pending{border-color:var(--blue);background:rgba(96,165,250,0.08);box-shadow:0 0 20px rgba(96,165,250,0.1)}
 /* 提交按钮 */
@@ -670,6 +669,9 @@ body::before{
       <div class="chart-wrap" id="chart-bar" style="display:none"><canvas id="canvas-bar"></canvas></div>
     </div>
 
+    <!-- 用户筛选 -->
+    <div class="user-filter" id="user-filter" style="display:none"></div>
+
     <!-- 未确认记录 -->
     <div class="pending-header">
       <div class="section-title">⏳ 未确认记录</div>
@@ -737,7 +739,6 @@ body::before{
   <!-- 数据页 -->
   <div class="page" id="page-data">
     <div class="section-title">📊 历史数据</div>
-    <div class="user-filter" id="data-user-filter"></div>
     <div class="data-filters" id="data-result-filter"></div>
     <input type="text" class="search-box" id="data-search" placeholder="搜索比赛..." oninput="renderDataPage()">
     <div class="data-summary" id="data-summary"></div>
@@ -809,7 +810,6 @@ let allBets = [];
 let selectedResult = null;
 let titleClickCount = 0;
 let titleClickTimer = null;
-let userFilter = 'all';
 let currentSettleId = null;
 
 // ===== 初始化 =====
@@ -887,14 +887,6 @@ async function showApp() {
   document.getElementById('current-name').textContent = currentUser.name;
   // 先并行加载，不阻塞 UI
   Promise.all([loadUsers(), loadBets()]).then(() => {
-    if (currentUser.name === '神秘人') {
-      userFilter = currentUser.id;
-      document.getElementById('user-filter').style.display = 'none';
-    } else {
-      userFilter = 'all';
-      document.getElementById('user-filter').style.display = '';
-      renderUserFilter();
-    }
     initDataFilters();
     switchTab('home');
   });
@@ -916,24 +908,9 @@ function switchTab(page) {
   if (page === 'data') { renderDataPage(); }
 }
 
-// ===== 用户筛选（首页） =====
-function renderUserFilter() {
-  const c = document.getElementById('user-filter');
-  c.innerHTML = '<div class="filter-chip active" data-user="all" onclick="filterUser(this,\'all\')">全部</div>';
-  allUsers.filter(u => !u.is_hidden).forEach(u => {
-    c.innerHTML += `<div class="filter-chip" data-user="${u.id}" onclick="filterUser(this,'${u.id}')">${u.name}</div>`;
-  });
-}
-function filterUser(el, userId) {
-  userFilter = userId;
-  document.querySelectorAll('#user-filter .filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderSummary(); renderPending(); drawCharts();
-}
-
 // ===== 汇总 =====
 function renderSummary() {
-  const bets = userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter);
+  const bets = allBets.filter(b => b.user_id === currentUser.id);
   const totalProfit = bets.reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
   const wins = bets.filter(b => b.result === '收米' || b.result === '收半').length;
   const settled = bets.filter(b => b.result && b.result !== '走水').length;
@@ -951,8 +928,7 @@ function renderSummary() {
 // ===== 未确认记录 =====
 function renderPending() {
   const list = document.getElementById('pending-list');
-  const bets = (userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter))
-    .filter(b => !b.result);
+  const bets = allBets.filter(b => b.user_id === currentUser.id && !b.result);
   document.getElementById('pending-count').textContent = bets.length;
   if (bets.length === 0) {
     list.innerHTML = '<div class="empty-state"><div class="icon">✅</div><div class="msg">没有待结算的记录</div></div>';
@@ -1095,8 +1071,7 @@ function switchChart(el, type) {
 }
 
 function drawCharts() {
-  const bets = (userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter))
-    .filter(b => b.result).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const bets = allBets.filter(b => b.user_id === currentUser.id && b.result).sort((a, b) => a.created_at.localeCompare(b.created_at));
   drawLineChart(bets);
   drawBarChart(bets);
 }
@@ -1210,29 +1185,17 @@ function drawBarChart(bets) {
 }
 
 // ===== 数据页 =====
-let dataUserFilter = 'all', dataResultFilter = 'all';
+let dataResultFilter = '全部';
 
 function initDataFilters() {
-  // 用户筛选
-  const uc = document.getElementById('data-user-filter');
-  uc.innerHTML = '<div class="filter-chip active" data-user="all" onclick="dataFilterUser(this,\'all\')">全部</div>';
-  allUsers.filter(u => !u.is_hidden).forEach(u => {
-    uc.innerHTML += `<div class="filter-chip" data-user="${u.id}" onclick="dataFilterUser(this,'${u.id}')">${u.name}</div>`;
-  });
-  // 结果筛选
   const rc = document.getElementById('data-result-filter');
+  rc.innerHTML = '';
   ['全部', '收米', '收半', '走水', '输半', '憾败', '未结算'].forEach((r, i) => {
     rc.innerHTML += `<div class="filter-chip ${i === 0 ? 'active' : ''}" data-result="${r}" onclick="dataFilterResult(this,'${r}')">${r}</div>`;
   });
-  dataUserFilter = 'all'; dataResultFilter = 'all';
+  dataResultFilter = '全部';
 }
 
-function dataFilterUser(el, userId) {
-  dataUserFilter = userId;
-  document.querySelectorAll('#data-user-filter .filter-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderDataPage();
-}
 function dataFilterResult(el, result) {
   dataResultFilter = result;
   document.querySelectorAll('#data-result-filter .filter-chip').forEach(c => c.classList.remove('active'));
@@ -1242,8 +1205,8 @@ function dataFilterResult(el, result) {
 
 function renderDataPage() {
   const search = document.getElementById('data-search').value.trim().toLowerCase();
-  let bets = [...allBets].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-  if (dataUserFilter !== 'all') bets = bets.filter(b => b.user_id === dataUserFilter);
+  // 数据页只显示当前登录用户的记录
+  let bets = allBets.filter(b => b.user_id === currentUser.id).sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
   if (dataResultFilter === '未结算') bets = bets.filter(b => !b.result);
   else if (dataResultFilter !== '全部') bets = bets.filter(b => b.result === dataResultFilter);
   if (search) bets = bets.filter(b => b.match_name.toLowerCase().includes(search));
