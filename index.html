@@ -269,6 +269,7 @@ body::before{
 .bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
 .bet-card.result-half-win::before{background:#86efac;box-shadow:0 0 8px rgba(134,239,172,0.2)}
 .bet-card.result-half-lose::before{background:#fca5a5;box-shadow:0 0 8px rgba(252,165,165,0.2)}
+.bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
 .bet-card.result-push::before{background:var(--yellow);box-shadow:0 0 8px var(--yellow-glow)}
 .bet-card.result-pending::before{background:var(--blue);box-shadow:0 0 8px var(--blue-glow)}
 @keyframes cardIn{
@@ -307,8 +308,9 @@ body::before{
 }
 .result-tag.走水{background:rgba(251,191,36,0.12);color:var(--yellow)}
 .result-tag.收米{background:rgba(74,222,128,0.12);color:var(--accent)}
-.result-tag.收半米{background:rgba(134,239,172,0.1);color:#86efac}
+.result-tag.收半{background:rgba(134,239,172,0.1);color:#86efac}
 .result-tag.输半{background:rgba(248,113,113,0.1);color:#fca5a5}
+.result-tag.憾败{background:rgba(248,113,113,0.15);color:var(--red)}
 .result-tag.未结算{background:rgba(96,165,250,0.1);color:var(--blue)}
 .bet-card .profit{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .profit.positive::before{content:'+'}
@@ -717,10 +719,11 @@ body::before{
         <label>比赛结果（可稍后结算）</label>
         <div class="result-group" style="grid-template-columns:1fr 1fr 1fr">
           <div class="result-btn pending selected" onclick="selectResult(this, null)" style="font-size:13px">⏳ 暂不选</div>
-          <div class="result-btn 走水" onclick="selectResult(this, '走水')">💧 走水</div>
           <div class="result-btn 收米" onclick="selectResult(this, '收米')">💰 收米</div>
-          <div class="result-btn 收半米" onclick="selectResult(this, '收半米')">💴 收半米</div>
+          <div class="result-btn 收半" onclick="selectResult(this, '收半')">💴 收半</div>
+          <div class="result-btn 走水" onclick="selectResult(this, '走水')">💧 走水</div>
           <div class="result-btn 输半" onclick="selectResult(this, '输半')">💸 输半</div>
+          <div class="result-btn 憾败" onclick="selectResult(this, '憾败')">💔 憾败</div>
         </div>
       </div>
       <div class="form-group">
@@ -766,10 +769,11 @@ body::before{
   <div class="sheet-title">结算下注</div>
   <div class="sheet-match" id="settle-match"></div>
   <div class="result-group">
-    <div class="result-btn 走水" onclick="confirmSettle('走水')">💧 走水</div>
     <div class="result-btn 收米" onclick="confirmSettle('收米')">💰 收米</div>
-    <div class="result-btn 收半米" onclick="confirmSettle('收半米')">💴 收半米</div>
+    <div class="result-btn 收半" onclick="confirmSettle('收半')">💴 收半</div>
+    <div class="result-btn 走水" onclick="confirmSettle('走水')">💧 走水</div>
     <div class="result-btn 输半" onclick="confirmSettle('输半')">💸 输半</div>
+    <div class="result-btn 憾败" onclick="confirmSettle('憾败')">💔 憾败</div>
   </div>
 </div>
 
@@ -931,7 +935,7 @@ function filterUser(el, userId) {
 function renderSummary() {
   const bets = userFilter === 'all' ? allBets : allBets.filter(b => b.user_id === userFilter);
   const totalProfit = bets.reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
-  const wins = bets.filter(b => b.result === '收米' || b.result === '收半米').length;
+  const wins = bets.filter(b => b.result === '收米' || b.result === '收半').length;
   const settled = bets.filter(b => b.result && b.result !== '走水').length;
   const today = new Date().toISOString().slice(0, 10);
   const todayProfit = bets.filter(b => b.created_at?.slice(0, 10) === today).reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
@@ -962,7 +966,7 @@ function betCardHTML(b, showActions) {
   const profit = parseFloat(b.profit) || 0;
   const profitClass = profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
   const resultClass = b.result || '未结算';
-  const resultMap = { '收米': 'result-win', '收半米': 'result-half-win', '输半': 'result-half-lose', '走水': 'result-push' };
+  const resultMap = { '收米': 'result-win', '收半': 'result-half-win', '输半': 'result-half-lose', '憾败': 'result-lose', '走水': 'result-push' };
   const cardClass = resultMap[b.result] || 'result-pending';
   const actions = showActions ? `
     <div class="bet-actions">
@@ -1015,8 +1019,9 @@ async function confirmSettle(result) {
   let profit = 0;
   if (result === '走水') profit = 0;
   else if (result === '收米') profit = amount * (odds - 1);
-  else if (result === '收半米') profit = amount * (odds - 1) / 2;
+  else if (result === '收半') profit = amount * (odds - 1) / 2;
   else if (result === '输半') profit = -amount / 2;
+  else if (result === '憾败') profit = -amount;
   profit = Math.round(profit * 100) / 100;
   const { error } = await sb.from('bets').update({ result, profit }).eq('id', currentSettleId);
   if (error) { toast('结算失败：' + error.message, 'error'); return; }
@@ -1054,8 +1059,9 @@ async function submitBet(e) {
   let profit = 0;
   if (selectedResult === '走水') profit = 0;
   else if (selectedResult === '收米') profit = amount * (odds - 1);
-  else if (selectedResult === '收半米') profit = amount * (odds - 1) / 2;
+  else if (selectedResult === '收半') profit = amount * (odds - 1) / 2;
   else if (selectedResult === '输半') profit = -amount / 2;
+  else if (selectedResult === '憾败') profit = -amount;
   const record = {
     user_id: currentUser.id,
     match_name: document.getElementById('match-name').value.trim(),
@@ -1067,7 +1073,7 @@ async function submitBet(e) {
     match_time: document.getElementById('match-time').value || null,
     note: document.getElementById('note').value.trim() || null,
   };
-  const { data, error } = await sb.from('bets').insert(record).select('*, users(name, is_hidden)').single();
+  const { error } = await sb.from('bets').insert(record);
   if (error) { toast('提交失败：' + error.message, 'error'); }
   else {
     toast('记录成功！', 'success');
@@ -1075,8 +1081,7 @@ async function submitBet(e) {
     document.querySelectorAll('#page-add .result-btn').forEach(b => b.classList.remove('selected'));
     document.querySelector('#page-add .result-btn.pending').classList.add('selected');
     selectedResult = null;
-    // 插入本地缓存头部
-    if (data) allBets.unshift(data);
+    await loadBets();
   }
   btn.disabled = false; btn.textContent = '记一笔';
 }
@@ -1216,7 +1221,7 @@ function initDataFilters() {
   });
   // 结果筛选
   const rc = document.getElementById('data-result-filter');
-  ['全部', '收米', '收半米', '走水', '输半', '未结算'].forEach((r, i) => {
+  ['全部', '收米', '收半', '走水', '输半', '憾败', '未结算'].forEach((r, i) => {
     rc.innerHTML += `<div class="filter-chip ${i === 0 ? 'active' : ''}" data-result="${r}" onclick="dataFilterResult(this,'${r}')">${r}</div>`;
   });
   dataUserFilter = 'all'; dataResultFilter = 'all';
