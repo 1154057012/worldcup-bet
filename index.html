@@ -271,6 +271,7 @@ body::before{
 .bet-card.result-lose::before{background:var(--red);box-shadow:0 0 8px var(--red-glow)}
 .bet-card.result-push::before{background:var(--yellow);box-shadow:0 0 8px var(--yellow-glow)}
 .bet-card.result-pending::before{background:var(--blue);box-shadow:0 0 8px var(--blue-glow)}
+.bet-card.result-other::before{background:var(--purple);box-shadow:0 0 8px rgba(167,139,250,0.25)}
 @keyframes cardIn{
   0%{opacity:0;transform:translateY(12px)}
   100%{opacity:1;transform:translateY(0)}
@@ -310,6 +311,7 @@ body::before{
 .result-tag.收半{background:rgba(134,239,172,0.1);color:#86efac}
 .result-tag.输半{background:rgba(248,113,113,0.1);color:#fca5a5}
 .result-tag.憾败{background:rgba(248,113,113,0.15);color:var(--red)}
+.result-tag.其他{background:rgba(167,139,250,0.12);color:var(--purple)}
 .result-tag.未结算{background:rgba(96,165,250,0.1);color:var(--blue)}
 .bet-card .profit{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .profit.positive::before{content:'+'}
@@ -356,6 +358,7 @@ body::before{
 .result-btn.selected.收半{border-color:#86efac;background:rgba(134,239,172,0.06);box-shadow:0 0 20px rgba(134,239,172,0.1)}
 .result-btn.selected.输半{border-color:var(--red);background:rgba(248,113,113,0.08);box-shadow:0 0 20px rgba(248,113,113,0.1)}
 .result-btn.selected.pending{border-color:var(--blue);background:rgba(96,165,250,0.08);box-shadow:0 0 20px rgba(96,165,250,0.1)}
+.result-btn.selected.其他{border-color:var(--purple);background:rgba(167,139,250,0.08);box-shadow:0 0 20px rgba(167,139,250,0.1)}
 /* 提交按钮 */
 .submit-btn{
   width:100%;padding:16px;
@@ -726,6 +729,10 @@ body::before{
           <div class="result-btn 走水" onclick="selectResult(this, '走水')">💧 走水</div>
           <div class="result-btn 输半" onclick="selectResult(this, '输半')">💸 输半</div>
           <div class="result-btn 憾败" onclick="selectResult(this, '憾败')">💔 憾败</div>
+          <div class="result-btn 其他" onclick="selectResult(this, '其他')">✏️ 其他</div>
+        </div>
+        <div id="add-other-wrap" style="display:none;margin-top:10px">
+          <input type="number" id="add-other-profit" step="0.01" placeholder="输入盈亏金额（正数赢，负数输）" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border-bright);border-radius:var(--radius-sm);color:var(--text);font-size:15px;outline:none;font-family:inherit">
         </div>
       </div>
       <div class="form-group">
@@ -775,6 +782,11 @@ body::before{
     <div class="result-btn 走水" onclick="confirmSettle('走水')">💧 走水</div>
     <div class="result-btn 输半" onclick="confirmSettle('输半')">💸 输半</div>
     <div class="result-btn 憾败" onclick="confirmSettle('憾败')">💔 憾败</div>
+    <div class="result-btn 其他" onclick="showOtherInput()">✏️ 其他</div>
+  </div>
+  <div id="other-profit-wrap" style="display:none;margin-top:12px">
+    <input type="number" id="other-profit" step="0.01" placeholder="输入盈亏金额（正数赢，负数输）" style="width:100%;padding:12px 14px;background:rgba(255,255,255,0.06);border:1px solid var(--border-bright);border-radius:var(--radius-sm);color:var(--text);font-size:15px;outline:none;font-family:inherit">
+    <button onclick="confirmSettle('其他')" style="width:100%;margin-top:8px;padding:12px;border-radius:var(--radius-sm);background:var(--gradient-accent);color:#000;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:inherit">确认结算</button>
   </div>
 </div>
 
@@ -942,7 +954,7 @@ function betCardHTML(b, showActions) {
   const profit = parseFloat(b.profit) || 0;
   const profitClass = profit > 0 ? 'positive' : profit < 0 ? 'negative' : 'zero';
   const resultClass = b.result || '未结算';
-  const resultMap = { '收米': 'result-win', '收半': 'result-half-win', '输半': 'result-half-lose', '憾败': 'result-lose', '走水': 'result-push' };
+  const resultMap = { '收米': 'result-win', '收半': 'result-half-win', '输半': 'result-half-lose', '憾败': 'result-lose', '走水': 'result-push', '其他': 'result-other' };
   const cardClass = resultMap[b.result] || 'result-pending';
   const actions = showActions ? `
     <div class="bet-actions">
@@ -985,7 +997,13 @@ function openSettle(id) {
 function closeSettle() {
   document.getElementById('settle-backdrop').classList.remove('show');
   document.getElementById('settle-sheet').classList.remove('show');
+  document.getElementById('other-profit-wrap').style.display = 'none';
   currentSettleId = null;
+}
+function showOtherInput() {
+  document.getElementById('other-profit-wrap').style.display = 'block';
+  document.getElementById('other-profit').value = '';
+  document.getElementById('other-profit').focus();
 }
 async function confirmSettle(result) {
   if (!currentSettleId) return;
@@ -993,7 +1011,12 @@ async function confirmSettle(result) {
   if (!bet) return;
   const odds = parseFloat(bet.odds), amount = parseFloat(bet.amount);
   let profit = 0;
-  if (result === '走水') profit = 0;
+  if (result === '其他') {
+    const input = document.getElementById('other-profit').value.trim();
+    if (!input) { toast('请输入盈亏金额', 'error'); return; }
+    profit = parseFloat(input);
+    if (isNaN(profit)) { toast('请输入有效数字', 'error'); return; }
+  } else if (result === '走水') profit = 0;
   else if (result === '收米') profit = amount * (odds - 1);
   else if (result === '收半') profit = amount * (odds - 1) / 2;
   else if (result === '输半') profit = -amount / 2;
@@ -1024,6 +1047,7 @@ function selectResult(el, result) {
   document.querySelectorAll('#page-add .result-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
   selectedResult = result;
+  document.getElementById('add-other-wrap').style.display = result === '其他' ? 'block' : 'none';
 }
 
 async function submitBet(e) {
@@ -1033,7 +1057,12 @@ async function submitBet(e) {
   const odds = parseFloat(document.getElementById('odds').value);
   const amount = parseFloat(document.getElementById('amount').value);
   let profit = 0;
-  if (selectedResult === '走水') profit = 0;
+  if (selectedResult === '其他') {
+    const input = document.getElementById('add-other-profit').value.trim();
+    if (!input) { toast('请输入盈亏金额', 'error'); btn.disabled = false; btn.textContent = '记一笔'; return; }
+    profit = parseFloat(input);
+    if (isNaN(profit)) { toast('请输入有效数字', 'error'); btn.disabled = false; btn.textContent = '记一笔'; return; }
+  } else if (selectedResult === '走水') profit = 0;
   else if (selectedResult === '收米') profit = amount * (odds - 1);
   else if (selectedResult === '收半') profit = amount * (odds - 1) / 2;
   else if (selectedResult === '输半') profit = -amount / 2;
@@ -1056,6 +1085,7 @@ async function submitBet(e) {
     document.getElementById('bet-form').reset();
     document.querySelectorAll('#page-add .result-btn').forEach(b => b.classList.remove('selected'));
     document.querySelector('#page-add .result-btn.pending').classList.add('selected');
+    document.getElementById('add-other-wrap').style.display = 'none';
     selectedResult = null;
     await loadBets();
   }
@@ -1190,7 +1220,7 @@ let dataResultFilter = '全部';
 function initDataFilters() {
   const rc = document.getElementById('data-result-filter');
   rc.innerHTML = '';
-  ['全部', '收米', '收半', '走水', '输半', '憾败', '未结算'].forEach((r, i) => {
+  ['全部', '收米', '收半', '走水', '输半', '憾败', '其他', '未结算'].forEach((r, i) => {
     rc.innerHTML += `<div class="filter-chip ${i === 0 ? 'active' : ''}" data-result="${r}" onclick="dataFilterResult(this,'${r}')">${r}</div>`;
   });
   dataResultFilter = '全部';
