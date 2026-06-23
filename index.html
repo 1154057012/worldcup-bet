@@ -458,8 +458,8 @@ body::before{
   font-size:13px;font-weight:700;color:var(--text-dim);
   text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;
 }
-.chart-wrap{position:relative;width:100%;height:140px}
-.chart-wrap canvas{width:100%;height:100%;display:block}
+.chart-wrap{position:relative;width:100%;height:140px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-wrap canvas{height:100%;display:block}
 .chart-tabs{
   display:flex;gap:6px;margin-bottom:12px;
 }
@@ -472,6 +472,28 @@ body::before{
 .chart-tab.active{
   background:rgba(74,222,128,0.1);border-color:var(--accent);color:var(--accent);
 }
+/* 图表 tooltip */
+.chart-tooltip{
+  position:absolute;
+  background:rgba(17,22,36,0.95);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--border-bright);
+  border-radius:10px;
+  padding:10px 14px;
+  font-size:12px;
+  color:var(--text);
+  pointer-events:none;
+  z-index:10;
+  white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  opacity:0;
+  transition:opacity 0.2s;
+}
+.chart-tooltip.show{opacity:1}
+.chart-tooltip .tooltip-date{color:var(--text-dim);font-size:11px;margin-bottom:4px}
+.chart-tooltip .tooltip-value{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.chart-tooltip .tooltip-value.positive{color:var(--accent)}
+.chart-tooltip .tooltip-value.negative{color:var(--red)}
 /* ===== 未确认记录 ===== */
 .pending-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -668,8 +690,8 @@ body::before{
         <div class="chart-tab active" data-chart="line" onclick="switchChart(this,'line')">累计趋势</div>
         <div class="chart-tab" data-chart="bar" onclick="switchChart(this,'bar')">每日盈亏</div>
       </div>
-      <div class="chart-wrap" id="chart-line"><canvas id="canvas-line"></canvas></div>
-      <div class="chart-wrap" id="chart-bar" style="display:none"><canvas id="canvas-bar"></canvas></div>
+      <div class="chart-wrap" id="chart-line"><canvas id="canvas-line"></canvas><div class="chart-tooltip" id="tooltip-line"></div></div>
+      <div class="chart-wrap" id="chart-bar" style="display:none"><canvas id="canvas-bar"></canvas><div class="chart-tooltip" id="tooltip-bar"></div></div>
     </div>
 
     <!-- 用户筛选 -->
@@ -1117,41 +1139,55 @@ function drawCharts() {
 
 function drawLineChart(bets) {
   const canvas = document.getElementById('canvas-line');
+  const tooltip = document.getElementById('tooltip-line');
+  const container = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
-  canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
-  ctx.scale(dpr, dpr);
-  const W = rect.width, H = rect.height, pad = { t: 10, r: 12, b: 24, l: 44 };
-  ctx.clearRect(0, 0, W, H);
-  if (bets.length < 2) { ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center'; ctx.fillText('需要至少2条记录', W / 2, H / 2); return; }
+  const containerRect = container.getBoundingClientRect();
+  const containerW = containerRect.width;
+  const H = containerRect.height;
+  const pad = { t: 10, r: 12, b: 24, l: 44 };
   // 按天聚合
   const daily = {};
   bets.forEach(b => {
     const d = (b.match_time || b.created_at)?.slice(0, 10);
     if (d) daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0);
   });
-  const days = Object.keys(daily).sort();
-  // 最近14天
-  const recent = days.slice(-14);
-  const vals = recent.map(d => daily[d]);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const allDays = Object.keys(daily).sort().filter(d => d <= today);
+  if (allDays.length < 2) {
+    canvas.width = containerW * dpr; canvas.height = H * dpr;
+    canvas.style.width = containerW + 'px'; canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
+    ctx.fillText('需要至少2条记录', containerW / 2, H / 2);
+    return;
+  }
+  const vals = allDays.map(d => daily[d]);
   let cum = 0; const cumVals = vals.map(v => { cum += v; return cum; });
   const minV = Math.min(0, ...cumVals), maxV = Math.max(0, ...cumVals);
   const range = maxV - minV || 1;
-  const xStep = (W - pad.l - pad.r) / Math.max(recent.length - 1, 1);
+  // 计算宽度
+  const pointWidth = 40;
+  const minChartW = containerW;
+  const chartW = Math.max(minChartW, allDays.length * pointWidth + pad.l + pad.r);
+  canvas.width = chartW * dpr; canvas.height = H * dpr;
+  canvas.style.width = chartW + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
   const toY = v => pad.t + (1 - (v - minV) / range) * (H - pad.t - pad.b);
-  const toX = i => pad.l + i * xStep;
+  const toX = i => pad.l + i * pointWidth;
+  ctx.clearRect(0, 0, chartW, H);
   // 网格线
   ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.t + i * (H - pad.t - pad.b) / 4;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(chartW - pad.r, y); ctx.stroke();
   }
   // 零线
   const zeroY = toY(0);
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(chartW - pad.r, zeroY); ctx.stroke();
   // 渐变填充
   const grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
   grad.addColorStop(0, 'rgba(74,222,128,0.15)'); grad.addColorStop(1, 'rgba(74,222,128,0)');
@@ -1170,61 +1206,131 @@ function drawLineChart(bets) {
   });
   // X轴标签
   ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
-  recent.forEach((d, i) => { if (i % Math.ceil(recent.length / 7) === 0 || i === recent.length - 1) ctx.fillText(d.slice(5), toX(i), H - 4); });
+  allDays.forEach((d, i) => { if (i % Math.ceil(allDays.length / 7) === 0 || i === allDays.length - 1) ctx.fillText(d.slice(5), toX(i), H - 4); });
   // Y轴标签
   ctx.textAlign = 'right';
   for (let i = 0; i <= 4; i++) {
     const v = minV + (1 - i / 4) * range;
     ctx.fillText(v.toFixed(0), pad.l - 6, pad.t + i * (H - pad.t - pad.b) / 4 + 4);
   }
+  // 初始滚动到最右边（今天）
+  container.scrollLeft = chartW - containerW;
+  // 点击事件
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * dpr;
+    const mouseY = (e.clientY - rect.top) * dpr;
+    let closestIdx = -1;
+    let minDist = Infinity;
+    cumVals.forEach((v, i) => {
+      const px = toX(i) * dpr;
+      const py = toY(v) * dpr;
+      const dist = Math.sqrt((mouseX - px) ** 2 + (mouseY - py) ** 2);
+      if (dist < minDist && dist < 20 * dpr) {
+        minDist = dist;
+        closestIdx = i;
+      }
+    });
+    if (closestIdx >= 0) {
+      const date = allDays[closestIdx];
+      const dailyVal = vals[closestIdx];
+      const cumVal = cumVals[closestIdx];
+      tooltip.innerHTML = `<div class="tooltip-date">${date}</div><div class="tooltip-value ${cumVal >= 0 ? 'positive' : 'negative'}">累计: ${cumVal >= 0 ? '+' : ''}${cumVal.toFixed(2)}</div><div class="tooltip-value ${dailyVal >= 0 ? 'positive' : 'negative'}">当日: ${dailyVal >= 0 ? '+' : ''}${dailyVal.toFixed(2)}</div>`;
+      tooltip.style.left = (toX(closestIdx) + 10) + 'px';
+      tooltip.style.top = (toY(cumVals[closestIdx]) - 10) + 'px';
+      tooltip.classList.add('show');
+      setTimeout(() => tooltip.classList.remove('show'), 2000);
+    }
+  };
 }
 
 function drawBarChart(bets) {
   const canvas = document.getElementById('canvas-bar');
+  const tooltip = document.getElementById('tooltip-bar');
+  const container = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   // 确保容器可见以获取正确尺寸
-  const container = canvas.parentElement;
   const wasHidden = container.style.display === 'none';
   if (wasHidden) container.style.display = '';
-  const rect = container.getBoundingClientRect();
-  canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
-  canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
-  ctx.scale(dpr, dpr);
-  const W = rect.width, H = rect.height, pad = { t: 10, r: 12, b: 24, l: 44 };
-  ctx.clearRect(0, 0, W, H);
-  if (bets.length < 1) { ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center'; ctx.fillText('暂无数据', W / 2, H / 2); return; }
+  const containerRect = container.getBoundingClientRect();
+  const containerW = containerRect.width;
+  const H = containerRect.height;
+  const pad = { t: 10, r: 12, b: 24, l: 44 };
+  if (bets.length < 1) {
+    canvas.width = containerW * dpr; canvas.height = H * dpr;
+    canvas.style.width = containerW + 'px'; canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
+    ctx.fillText('暂无数据', containerW / 2, H / 2);
+    if (wasHidden) container.style.display = 'none';
+    return;
+  }
   const daily = {};
   bets.forEach(b => { const d = (b.match_time || b.created_at)?.slice(0, 10); if (d) daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0); });
-  const recent = Object.keys(daily).sort().slice(-14);
-  const vals = recent.map(d => daily[d]);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const allDays = Object.keys(daily).sort().filter(d => d <= today);
+  const vals = allDays.map(d => daily[d]);
   const maxV = Math.max(1, ...vals.map(Math.abs));
+  // 计算宽度
+  const barWidth = 30;
+  const gap = 40;
+  const minChartW = containerW;
+  const chartW = Math.max(minChartW, allDays.length * gap + pad.l + pad.r);
+  canvas.width = chartW * dpr; canvas.height = H * dpr;
+  canvas.style.width = chartW + 'px'; canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
   const zeroY = pad.t + (H - pad.t - pad.b) / 2;
-  const barW = Math.min(20, (W - pad.l - pad.r) / recent.length * 0.6);
-  const gap = (W - pad.l - pad.r) / recent.length;
+  ctx.clearRect(0, 0, chartW, H);
   // 零线
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(W - pad.r, zeroY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(chartW - pad.r, zeroY); ctx.stroke();
   // 柱子
   vals.forEach((v, i) => {
-    const x = pad.l + gap * i + gap / 2 - barW / 2;
+    const x = pad.l + gap * i + gap / 2 - barWidth / 2;
     const h = Math.abs(v) / maxV * (H - pad.t - pad.b) / 2;
     const y = v >= 0 ? zeroY - h : zeroY;
     ctx.fillStyle = v >= 0 ? 'rgba(74,222,128,0.7)' : 'rgba(248,113,113,0.7)';
     ctx.beginPath();
-    const r = Math.min(4, barW / 2);
-    if (v >= 0) { ctx.moveTo(x + r, y); ctx.lineTo(x + barW - r, y); ctx.quadraticCurveTo(x + barW, y, x + barW, y + r); ctx.lineTo(x + barW, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); }
-    else { ctx.moveTo(x, y); ctx.lineTo(x + barW, y); ctx.lineTo(x + barW, y + h - r); ctx.quadraticCurveTo(x + barW, y + h, x + barW - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); }
+    const r = Math.min(4, barWidth / 2);
+    if (v >= 0) { ctx.moveTo(x + r, y); ctx.lineTo(x + barWidth - r, y); ctx.quadraticCurveTo(x + barWidth, y, x + barWidth, y + r); ctx.lineTo(x + barWidth, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); }
+    else { ctx.moveTo(x, y); ctx.lineTo(x + barWidth, y); ctx.lineTo(x + barWidth, y + h - r); ctx.quadraticCurveTo(x + barWidth, y + h, x + barWidth - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); }
     ctx.closePath(); ctx.fill();
   });
   // X轴标签
   ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
-  recent.forEach((d, i) => { if (i % Math.ceil(recent.length / 7) === 0 || i === recent.length - 1) ctx.fillText(d.slice(5), pad.l + gap * i + gap / 2, H - 4); });
+  allDays.forEach((d, i) => { if (i % Math.ceil(allDays.length / 7) === 0 || i === allDays.length - 1) ctx.fillText(d.slice(5), pad.l + gap * i + gap / 2, H - 4); });
   // Y轴标签
   ctx.textAlign = 'right';
   ctx.fillText('+' + maxV.toFixed(0), pad.l - 6, pad.t + 4);
   ctx.fillText('0', pad.l - 6, zeroY + 4);
   ctx.fillText('-' + maxV.toFixed(0), pad.l - 6, H - pad.b);
+  // 初始滚动到最右边（今天）
+  container.scrollLeft = chartW - containerW;
+  // 点击事件
+  canvas.onclick = function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * dpr;
+    const mouseY = (e.clientY - rect.top) * dpr;
+    let closestIdx = -1;
+    vals.forEach((v, i) => {
+      const barLeft = (pad.l + gap * i + gap / 2 - barWidth / 2) * dpr;
+      const barRight = (pad.l + gap * i + gap / 2 + barWidth / 2) * dpr;
+      if (mouseX >= barLeft && mouseX <= barRight) {
+        closestIdx = i;
+      }
+    });
+    if (closestIdx >= 0) {
+      const date = allDays[closestIdx];
+      const val = vals[closestIdx];
+      tooltip.innerHTML = `<div class="tooltip-date">${date}</div><div class="tooltip-value ${val >= 0 ? 'positive' : 'negative'}">盈亏: ${val >= 0 ? '+' : ''}${val.toFixed(2)}</div>`;
+      tooltip.style.left = (pad.l + gap * closestIdx + gap / 2) + 'px';
+      tooltip.style.top = (zeroY - Math.abs(val) / maxV * (H - pad.t - pad.b) / 2 - 10) + 'px';
+      tooltip.classList.add('show');
+      setTimeout(() => tooltip.classList.remove('show'), 2000);
+    }
+  };
   // 恢复隐藏状态
   if (wasHidden) container.style.display = 'none';
 }
