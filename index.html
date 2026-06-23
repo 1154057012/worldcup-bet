@@ -926,8 +926,13 @@ function renderSummary() {
   const totalProfit = bets.reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
   const wins = bets.filter(b => b.result === '收米' || b.result === '收半').length;
   const settled = bets.filter(b => b.result && b.result !== '走水').length;
-  const today = new Date().toISOString().slice(0, 10);
-  const todayProfit = bets.filter(b => b.created_at?.slice(0, 10) === today).reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
+  // 获取本地时间的今天日期
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const todayProfit = bets.filter(b => {
+    const betDate = (b.match_time || b.created_at)?.slice(0, 10);
+    return betDate === today;
+  }).reduce((s, b) => s + (parseFloat(b.profit) || 0), 0);
   const el = id => document.getElementById(id);
   el('total-profit').textContent = (totalProfit >= 0 ? '+' : '') + totalProfit.toFixed(2);
   el('total-profit').className = 'value ' + (totalProfit >= 0 ? 'positive' : 'negative');
@@ -961,7 +966,7 @@ function betCardHTML(b, showActions) {
       <button class="btn-settle" onclick="openSettle('${b.id}')">结算</button>
       <button class="btn-delete" onclick="deleteBet('${b.id}')">删除</button>
     </div>` : '';
-  const dateStr = b.created_at ? b.created_at.slice(0, 10) : '';
+  const dateStr = (b.match_time || b.created_at) ? (b.match_time || b.created_at).slice(0, 10) : '';
   return `
     <div class="bet-card ${cardClass}">
       <div class="bet-header">
@@ -1101,7 +1106,11 @@ function switchChart(el, type) {
 }
 
 function drawCharts() {
-  const bets = allBets.filter(b => b.user_id === currentUser.id && b.result).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const bets = allBets.filter(b => b.user_id === currentUser.id && b.result).sort((a, b) => {
+    const dateA = a.match_time || a.created_at || '';
+    const dateB = b.match_time || b.created_at || '';
+    return dateA.localeCompare(dateB);
+  });
   drawLineChart(bets);
   drawBarChart(bets);
 }
@@ -1120,8 +1129,8 @@ function drawLineChart(bets) {
   // 按天聚合
   const daily = {};
   bets.forEach(b => {
-    const d = b.created_at.slice(0, 10);
-    daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0);
+    const d = (b.match_time || b.created_at)?.slice(0, 10);
+    if (d) daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0);
   });
   const days = Object.keys(daily).sort();
   // 最近14天
@@ -1174,7 +1183,11 @@ function drawBarChart(bets) {
   const canvas = document.getElementById('canvas-bar');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.parentElement.getBoundingClientRect();
+  // 确保容器可见以获取正确尺寸
+  const container = canvas.parentElement;
+  const wasHidden = container.style.display === 'none';
+  if (wasHidden) container.style.display = '';
+  const rect = container.getBoundingClientRect();
   canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
   canvas.style.width = rect.width + 'px'; canvas.style.height = rect.height + 'px';
   ctx.scale(dpr, dpr);
@@ -1182,7 +1195,7 @@ function drawBarChart(bets) {
   ctx.clearRect(0, 0, W, H);
   if (bets.length < 1) { ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center'; ctx.fillText('暂无数据', W / 2, H / 2); return; }
   const daily = {};
-  bets.forEach(b => { const d = b.created_at.slice(0, 10); daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0); });
+  bets.forEach(b => { const d = (b.match_time || b.created_at)?.slice(0, 10); if (d) daily[d] = (daily[d] || 0) + (parseFloat(b.profit) || 0); });
   const recent = Object.keys(daily).sort().slice(-14);
   const vals = recent.map(d => daily[d]);
   const maxV = Math.max(1, ...vals.map(Math.abs));
@@ -1212,6 +1225,8 @@ function drawBarChart(bets) {
   ctx.fillText('+' + maxV.toFixed(0), pad.l - 6, pad.t + 4);
   ctx.fillText('0', pad.l - 6, zeroY + 4);
   ctx.fillText('-' + maxV.toFixed(0), pad.l - 6, H - pad.b);
+  // 恢复隐藏状态
+  if (wasHidden) container.style.display = 'none';
 }
 
 // ===== 数据页 =====
