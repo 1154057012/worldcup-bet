@@ -458,8 +458,27 @@ body::before{
   font-size:13px;font-weight:700;color:var(--text-dim);
   text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;
 }
-.chart-wrap{position:relative;width:100%;height:140px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.chart-wrap canvas{height:100%;display:block}
+.chart-wrap{position:relative;width:100%;height:140px}
+.chart-inner{display:flex;height:100%}
+.chart-scroll{flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
+.chart-scroll canvas{height:100%;display:block}
+/* 固定 Y 轴标签 */
+.y-axis-fixed{
+  width:44px;
+  height:100%;
+  position:relative;
+  background:var(--card);
+  pointer-events:none;
+  flex-shrink:0;
+}
+.y-axis-fixed .y-label{
+  position:absolute;
+  right:6px;
+  font-size:10px;
+  color:#6b7fa0;
+  font-family:'Inter',sans-serif;
+  transform:translateY(-50%);
+}
 .chart-tabs{
   display:flex;gap:6px;margin-bottom:12px;
 }
@@ -690,8 +709,24 @@ body::before{
         <div class="chart-tab active" data-chart="line" onclick="switchChart(this,'line')">累计趋势</div>
         <div class="chart-tab" data-chart="bar" onclick="switchChart(this,'bar')">每日盈亏</div>
       </div>
-      <div class="chart-wrap" id="chart-line"><canvas id="canvas-line"></canvas><div class="chart-tooltip" id="tooltip-line"></div></div>
-      <div class="chart-wrap" id="chart-bar" style="display:none"><canvas id="canvas-bar"></canvas><div class="chart-tooltip" id="tooltip-bar"></div></div>
+      <div class="chart-wrap" id="chart-line">
+        <div class="chart-inner">
+          <div class="y-axis-fixed" id="y-axis-line"></div>
+          <div class="chart-scroll">
+            <canvas id="canvas-line"></canvas>
+            <div class="chart-tooltip" id="tooltip-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chart-bar" style="display:none">
+        <div class="chart-inner">
+          <div class="y-axis-fixed" id="y-axis-bar"></div>
+          <div class="chart-scroll">
+            <canvas id="canvas-bar"></canvas>
+            <div class="chart-tooltip" id="tooltip-bar"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 用户筛选 -->
@@ -1140,13 +1175,15 @@ function drawCharts() {
 function drawLineChart(bets) {
   const canvas = document.getElementById('canvas-line');
   const tooltip = document.getElementById('tooltip-line');
-  const container = canvas.parentElement;
+  const yAxis = document.getElementById('y-axis-line');
+  const scrollContainer = canvas.parentElement;
+  const container = scrollContainer.parentElement.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
-  const containerRect = container.getBoundingClientRect();
+  const containerRect = scrollContainer.getBoundingClientRect();
   const containerW = containerRect.width;
   const H = containerRect.height;
-  const pad = { t: 10, r: 12, b: 24, l: 44 };
+  const pad = { t: 10, r: 12, b: 24, l: 0 };
   // 按天聚合
   const daily = {};
   bets.forEach(b => {
@@ -1162,6 +1199,7 @@ function drawLineChart(bets) {
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
     ctx.fillText('需要至少2条记录', containerW / 2, H / 2);
+    yAxis.innerHTML = '';
     return;
   }
   const vals = allDays.map(d => daily[d]);
@@ -1170,24 +1208,23 @@ function drawLineChart(bets) {
   const range = maxV - minV || 1;
   // 计算宽度
   const pointWidth = 40;
-  const minChartW = containerW;
-  const chartW = Math.max(minChartW, allDays.length * pointWidth + pad.l + pad.r);
+  const chartW = Math.max(containerW, allDays.length * pointWidth + pad.r);
   canvas.width = chartW * dpr; canvas.height = H * dpr;
   canvas.style.width = chartW + 'px'; canvas.style.height = H + 'px';
   ctx.scale(dpr, dpr);
   const toY = v => pad.t + (1 - (v - minV) / range) * (H - pad.t - pad.b);
-  const toX = i => pad.l + i * pointWidth;
+  const toX = i => i * pointWidth;
   ctx.clearRect(0, 0, chartW, H);
   // 网格线
   ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = pad.t + i * (H - pad.t - pad.b) / 4;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(chartW - pad.r, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(chartW, y); ctx.stroke();
   }
   // 零线
   const zeroY = toY(0);
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(chartW - pad.r, zeroY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(chartW, zeroY); ctx.stroke();
   // 渐变填充
   const grad = ctx.createLinearGradient(0, pad.t, 0, H - pad.b);
   grad.addColorStop(0, 'rgba(74,222,128,0.15)'); grad.addColorStop(1, 'rgba(74,222,128,0)');
@@ -1207,14 +1244,19 @@ function drawLineChart(bets) {
   // X轴标签
   ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
   allDays.forEach((d, i) => { if (i % Math.ceil(allDays.length / 7) === 0 || i === allDays.length - 1) ctx.fillText(d.slice(5), toX(i), H - 4); });
-  // Y轴标签
-  ctx.textAlign = 'right';
+  // 固定Y轴标签
+  yAxis.innerHTML = '';
   for (let i = 0; i <= 4; i++) {
     const v = minV + (1 - i / 4) * range;
-    ctx.fillText(v.toFixed(0), pad.l - 6, pad.t + i * (H - pad.t - pad.b) / 4 + 4);
+    const y = pad.t + i * (H - pad.t - pad.b) / 4;
+    const label = document.createElement('div');
+    label.className = 'y-label';
+    label.textContent = v.toFixed(0);
+    label.style.top = y + 'px';
+    yAxis.appendChild(label);
   }
   // 初始滚动到最右边（今天）
-  container.scrollLeft = chartW - containerW;
+  scrollContainer.scrollLeft = chartW - containerW;
   // 点击事件
   canvas.onclick = function(e) {
     const rect = canvas.getBoundingClientRect();
@@ -1236,8 +1278,22 @@ function drawLineChart(bets) {
       const dailyVal = vals[closestIdx];
       const cumVal = cumVals[closestIdx];
       tooltip.innerHTML = `<div class="tooltip-date">${date}</div><div class="tooltip-value ${cumVal >= 0 ? 'positive' : 'negative'}">累计: ${cumVal >= 0 ? '+' : ''}${cumVal.toFixed(2)}</div><div class="tooltip-value ${dailyVal >= 0 ? 'positive' : 'negative'}">当日: ${dailyVal >= 0 ? '+' : ''}${dailyVal.toFixed(2)}</div>`;
-      tooltip.style.left = (toX(closestIdx) + 10) + 'px';
-      tooltip.style.top = (toY(cumVals[closestIdx]) - 10) + 'px';
+      // Tooltip 边界检测
+      let left = toX(closestIdx) + 10;
+      let top = toY(cumVals[closestIdx]) - 10;
+      const tooltipW = 150;
+      const tooltipH = 80;
+      if (left + tooltipW > scrollContainer.scrollLeft + containerW) {
+        left = toX(closestIdx) - tooltipW - 10;
+      }
+      if (top < 0) {
+        top = 10;
+      }
+      if (top + tooltipH > H) {
+        top = H - tooltipH - 10;
+      }
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
       tooltip.classList.add('show');
       setTimeout(() => tooltip.classList.remove('show'), 2000);
     }
@@ -1247,22 +1303,25 @@ function drawLineChart(bets) {
 function drawBarChart(bets) {
   const canvas = document.getElementById('canvas-bar');
   const tooltip = document.getElementById('tooltip-bar');
-  const container = canvas.parentElement;
+  const yAxis = document.getElementById('y-axis-bar');
+  const scrollContainer = canvas.parentElement;
+  const container = scrollContainer.parentElement.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   // 确保容器可见以获取正确尺寸
   const wasHidden = container.style.display === 'none';
   if (wasHidden) container.style.display = '';
-  const containerRect = container.getBoundingClientRect();
+  const containerRect = scrollContainer.getBoundingClientRect();
   const containerW = containerRect.width;
   const H = containerRect.height;
-  const pad = { t: 10, r: 12, b: 24, l: 44 };
+  const pad = { t: 10, r: 12, b: 24, l: 0 };
   if (bets.length < 1) {
     canvas.width = containerW * dpr; canvas.height = H * dpr;
     canvas.style.width = containerW + 'px'; canvas.style.height = H + 'px';
     ctx.scale(dpr, dpr);
     ctx.fillStyle = '#6b7fa0'; ctx.font = '13px Inter'; ctx.textAlign = 'center';
     ctx.fillText('暂无数据', containerW / 2, H / 2);
+    yAxis.innerHTML = '';
     if (wasHidden) container.style.display = 'none';
     return;
   }
@@ -1276,8 +1335,7 @@ function drawBarChart(bets) {
   // 计算宽度
   const barWidth = 30;
   const gap = 40;
-  const minChartW = containerW;
-  const chartW = Math.max(minChartW, allDays.length * gap + pad.l + pad.r);
+  const chartW = Math.max(containerW, allDays.length * gap + pad.r);
   canvas.width = chartW * dpr; canvas.height = H * dpr;
   canvas.style.width = chartW + 'px'; canvas.style.height = H + 'px';
   ctx.scale(dpr, dpr);
@@ -1285,10 +1343,10 @@ function drawBarChart(bets) {
   ctx.clearRect(0, 0, chartW, H);
   // 零线
   ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad.l, zeroY); ctx.lineTo(chartW - pad.r, zeroY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(chartW, zeroY); ctx.stroke();
   // 柱子
   vals.forEach((v, i) => {
-    const x = pad.l + gap * i + gap / 2 - barWidth / 2;
+    const x = gap * i + gap / 2 - barWidth / 2;
     const h = Math.abs(v) / maxV * (H - pad.t - pad.b) / 2;
     const y = v >= 0 ? zeroY - h : zeroY;
     ctx.fillStyle = v >= 0 ? 'rgba(74,222,128,0.7)' : 'rgba(248,113,113,0.7)';
@@ -1300,14 +1358,23 @@ function drawBarChart(bets) {
   });
   // X轴标签
   ctx.fillStyle = '#6b7fa0'; ctx.font = '10px Inter'; ctx.textAlign = 'center';
-  allDays.forEach((d, i) => { if (i % Math.ceil(allDays.length / 7) === 0 || i === allDays.length - 1) ctx.fillText(d.slice(5), pad.l + gap * i + gap / 2, H - 4); });
-  // Y轴标签
-  ctx.textAlign = 'right';
-  ctx.fillText('+' + maxV.toFixed(0), pad.l - 6, pad.t + 4);
-  ctx.fillText('0', pad.l - 6, zeroY + 4);
-  ctx.fillText('-' + maxV.toFixed(0), pad.l - 6, H - pad.b);
+  allDays.forEach((d, i) => { if (i % Math.ceil(allDays.length / 7) === 0 || i === allDays.length - 1) ctx.fillText(d.slice(5), gap * i + gap / 2, H - 4); });
+  // 固定Y轴标签
+  yAxis.innerHTML = '';
+  const yLabels = [
+    { value: maxV, y: pad.t + 4 },
+    { value: 0, y: zeroY + 4 },
+    { value: -maxV, y: H - pad.b }
+  ];
+  yLabels.forEach(item => {
+    const label = document.createElement('div');
+    label.className = 'y-label';
+    label.textContent = (item.value >= 0 ? '+' : '') + item.value.toFixed(0);
+    label.style.top = item.y + 'px';
+    yAxis.appendChild(label);
+  });
   // 初始滚动到最右边（今天）
-  container.scrollLeft = chartW - containerW;
+  scrollContainer.scrollLeft = chartW - containerW;
   // 点击事件
   canvas.onclick = function(e) {
     const rect = canvas.getBoundingClientRect();
@@ -1315,8 +1382,8 @@ function drawBarChart(bets) {
     const mouseY = (e.clientY - rect.top) * dpr;
     let closestIdx = -1;
     vals.forEach((v, i) => {
-      const barLeft = (pad.l + gap * i + gap / 2 - barWidth / 2) * dpr;
-      const barRight = (pad.l + gap * i + gap / 2 + barWidth / 2) * dpr;
+      const barLeft = (gap * i + gap / 2 - barWidth / 2) * dpr;
+      const barRight = (gap * i + gap / 2 + barWidth / 2) * dpr;
       if (mouseX >= barLeft && mouseX <= barRight) {
         closestIdx = i;
       }
@@ -1325,8 +1392,22 @@ function drawBarChart(bets) {
       const date = allDays[closestIdx];
       const val = vals[closestIdx];
       tooltip.innerHTML = `<div class="tooltip-date">${date}</div><div class="tooltip-value ${val >= 0 ? 'positive' : 'negative'}">盈亏: ${val >= 0 ? '+' : ''}${val.toFixed(2)}</div>`;
-      tooltip.style.left = (pad.l + gap * closestIdx + gap / 2) + 'px';
-      tooltip.style.top = (zeroY - Math.abs(val) / maxV * (H - pad.t - pad.b) / 2 - 10) + 'px';
+      // Tooltip 边界检测
+      let left = gap * closestIdx + gap / 2;
+      let top = zeroY - Math.abs(val) / maxV * (H - pad.t - pad.b) / 2 - 10;
+      const tooltipW = 150;
+      const tooltipH = 60;
+      if (left + tooltipW > scrollContainer.scrollLeft + containerW) {
+        left = gap * closestIdx + gap / 2 - tooltipW;
+      }
+      if (top < 0) {
+        top = 10;
+      }
+      if (top + tooltipH > H) {
+        top = H - tooltipH - 10;
+      }
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
       tooltip.classList.add('show');
       setTimeout(() => tooltip.classList.remove('show'), 2000);
     }
