@@ -279,7 +279,7 @@ body::before{
 .bet-card:active{background:var(--card-hover)}
 /* 滑动删除 */
 .bet-card-wrapper{position:relative;overflow:hidden;border-radius:var(--radius)}
-.bet-card-wrapper .bet-card{transition:transform 0.25s ease;touch-action:pan-y}
+.bet-card-wrapper .bet-card{transition:transform 0.25s ease;touch-action:pan-y;position:relative;z-index:1}
 .bet-card-wrapper .swipe-delete-zone{
   position:absolute;right:0;top:0;bottom:0;width:80px;
   display:flex;align-items:center;justify-content:center;
